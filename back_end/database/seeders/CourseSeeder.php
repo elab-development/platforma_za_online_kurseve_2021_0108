@@ -10,8 +10,8 @@ class CourseSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run()
     {
-        Course::factory()->count(10)->create();
+        Course::factory(10)->create();
     }
 }

@@ -10,8 +10,8 @@ class CertificateSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run()
     {
-        Certificate::factory()->count(10)->create();
+        Certificate::factory(5)->create(); // Samo nekim studentima dodeliti sertifikate
     }
 }

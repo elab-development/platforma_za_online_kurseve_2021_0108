@@ -10,8 +10,8 @@ class EnrollmentSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run()
     {
-        Enrollment::factory()->count(20)->create();
+        Enrollment::factory(15)->create();
     }
 }
