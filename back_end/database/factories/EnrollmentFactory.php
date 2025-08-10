@@ -17,8 +17,8 @@ class EnrollmentFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'   => User::factory(),
-            'course_id' => Course::factory(),
+            'user_id' => User::where('role', 'student')->inRandomOrder()->first()->id ?? User::factory()->create(['role' => 'student'])->id,
+            'course_id' => Course::inRandomOrder()->first()->id ?? Course::factory()->create()->id,
         ];
     }
 }

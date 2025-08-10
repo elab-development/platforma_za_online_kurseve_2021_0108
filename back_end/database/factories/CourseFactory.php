@@ -17,9 +17,9 @@ class CourseFactory extends Factory
     public function definition(): array
     {
         return [
-              'title'       => $this->faker->sentence(3),
+            'title' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'teacher_id'  => User::factory(), // generiše novog user-a kao nastavnika
+            'teacher_id' => User::where('role', 'teacher')->inRandomOrder()->first()->id ?? User::factory()->create(['role' => 'teacher'])->id,
         ];
     }
 }

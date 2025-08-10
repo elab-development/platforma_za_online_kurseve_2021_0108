@@ -16,10 +16,10 @@ class CertificateFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'user_id' => User::factory(),
-            'course_id' => Course::factory(),
-            'certificate_url' => $this->faker->url(),
+         return [
+            'user_id' => User::where('role', 'student')->inRandomOrder()->first()->id ?? User::factory()->create(['role' => 'student'])->id,
+            'course_id' => Course::inRandomOrder()->first()->id ?? Course::factory()->create()->id,
+            'certificate_url' => 'https://example.com/certificates/' . $this->faker->uuid() . '.pdf',
         ];
     }
 }
