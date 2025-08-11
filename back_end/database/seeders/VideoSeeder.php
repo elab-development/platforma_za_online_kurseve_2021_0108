@@ -12,6 +12,6 @@ class VideoSeeder extends Seeder
      */
     public function run(): void
     {
-        Video::factory()->count(15)->create();
+        Video::factory(30)->create(); // Svaki kurs će imati oko 3 video lekcije
     }
 }

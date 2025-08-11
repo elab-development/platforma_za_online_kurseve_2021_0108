@@ -17,9 +17,9 @@ class VideoFactory extends Factory
     public function definition(): array
     {
         return [
-             'title' => $this->faker->sentence(4),
-            'video_url' => $this->faker->url(),
-            'course_id' => Course::factory(),
+            'title' => $this->faker->sentence(4),
+            'video_url' => 'https://example.com/' . $this->faker->uuid() . '.mp4',
+            'course_id' => Course::inRandomOrder()->first()->id ?? Course::factory()->create()->id,
         ];
     }
 }
