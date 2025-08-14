@@ -1,13 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { FaUserGraduate, FaBookOpen, FaCode, FaPaintBrush, FaRobot, FaDatabase, FaReact, FaPython, FaShieldAlt, FaGlobe } from "react-icons/fa";
 import Sidebar from "./Sidebar";
-import useFetch from "../hooks/useFetch";
-import Breadcrumbs from "./Breadcrumbs";
 
-/**
- * Lokalni fallback kursevi
- */
-const localCourses = [
+const allCourses = [
   { title: "Kompletan JavaScript Kurs 2022", instructor: "Marko Petrović", link: "#", icon: <FaCode /> },
   { title: "Online HTML & CSS kurs", instructor: "Ivana Jovanović", link: "#", icon: <FaGlobe /> },
   { title: "React od nule do heroja", instructor: "Nikola Stojanović", link: "#", icon: <FaReact /> },
@@ -18,56 +13,16 @@ const localCourses = [
   { title: "Cyber Security Basics", instructor: "Nikola Stojanović", link: "#", icon: <FaShieldAlt /> }
 ];
 
-/**
- * Primer API endpointa:
- * - Ako imaš svoj backend: ubaci npr. "/api/courses" ili punu URL adresu
- * - Ako nemaš backend sada, možeš ostaviti neki javni endpoint ili prazan string da force fallback
- */
-const COURSES_API_URL = process.env.REACT_APP_COURSES_API || "https://jsonplaceholder.typicode.com/users";
-
-/**
- * Helper: mapiraj "raw" API podatke u oblik koji komponenta očekuje.
- * Za jsonplaceholder koristimo name kao instructor i pravimo dummy kursove.
- * Ako imaš pravi API, prilagodi map funkciju ili baci direktno data ako je već u odgovarajućem obliku.
- */
-const mapApiToCourses = (apiData) => {
-  if (!Array.isArray(apiData)) return null;
-
-  // Ako API vraća već kurseve u istom obliku, možeš direktno vratiti apiData
-  // Ali za primer sa jsonplaceholder ćemo iz svakog usera napraviti kurs
-  const mapped = apiData.slice(0, 8).map((u, idx) => ({
-    title: u.company?.bs
-      ? `${u.company.bs.split(" ")[0].charAt(0).toUpperCase() + u.company.bs.split(" ")[0].slice(1)} kurs`
-      : `Kurs ${idx + 1}`,
-    instructor: u.name || `Predavač ${idx + 1}`,
-    link: "#",
-    icon: localCourses[idx]?.icon || <FaBookOpen />
-  }));
-  return mapped;
-};
+const uniqueInstructors = [...new Set(allCourses.map(course => course.instructor))];
 
 const Courses = () => {
-  // useFetch: pokuša da povuče, ako error => data će biti fallback
-  const { data: apiData, loading, error } = useFetch(COURSES_API_URL, {}, null);
-
-  // Ako apiData postoji i mapira se, koristimo ga; inače koristimo lokalne kurseve
-  const derivedCourses = useMemo(() => {
-    const mapped = mapApiToCourses(apiData);
-    return mapped && mapped.length ? mapped : localCourses;
-  }, [apiData]);
-
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 4;
   const [filteredInstructor, setFilteredInstructor] = useState(null);
 
-  // Generišemo listu instruktora iz trenutno aktivnih kurseva
-  const uniqueInstructors = useMemo(() => {
-    return [...new Set(derivedCourses.map(course => course.instructor))];
-  }, [derivedCourses]);
-
   const filteredCourses = filteredInstructor
-    ? derivedCourses.filter(course => course.instructor === filteredInstructor)
-    : derivedCourses;
+    ? allCourses.filter(course => course.instructor === filteredInstructor)
+    : allCourses;
 
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
@@ -75,13 +30,13 @@ const Courses = () => {
 
   const nextPage = () => {
     if (indexOfLastCourse < filteredCourses.length) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage(currentPage + 1);
     }
   };
 
   const prevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage(currentPage - 1);
     }
   };
 
@@ -100,12 +55,7 @@ const Courses = () => {
       <Sidebar />
       <div style={styles.mainContent}>
         <div style={styles.dashboardContent}>
-          <Breadcrumbs />
           <h1 style={styles.title}><FaBookOpen /> Kursevi</h1>
-
-          {/* Ako fetch traje ili se desila greška, obavesti korisnika (ali i dalje prikaži fallback) */}
-          {loading && <p style={{ color: "#555" }}>Učitavanje podataka...</p>}
-          {error && <p style={{ color: "darkorange" }}>Ne mogu da povučem podatke sa API-ja — koristi se lokalni sadržaj.</p>}
 
           {/* Lista nastavnika sa klikabilnim filterima */}
           <div style={styles.instructorsList}>
@@ -138,7 +88,6 @@ const Courses = () => {
                 </div>
               </div>
             ))}
-            {currentCourses.length === 0 && <p>Nema kurseva za izabrane filtere.</p>}
           </div>
 
           <div style={styles.pagination}>
@@ -152,7 +101,6 @@ const Courses = () => {
   );
 };
 
-// --- stilovi ostaju isti kao pre (kopirano iz tvog originalnog fajla) ---
 const styles = {
   container: {
     display: "flex",
@@ -259,4 +207,3 @@ const styles = {
 };
 
 export default Courses;
-
