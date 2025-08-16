@@ -9,8 +9,8 @@ export const AuthProvider = ({ children }) => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  const login = (username, role) => {
-    const userData = { username, role };
+  const login = (username, role, token) => {
+    const userData = { username, role, token };
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData)); // Čuvanje korisnika u localStorage
   };

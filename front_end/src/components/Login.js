@@ -7,19 +7,29 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
-  const user = {
-    username: "Filip",  // Ovdje bi trebalo biti iz baze ili API odgovora
-    role: "admin",      // Ovdje bi trebalo biti iz baze ili API odgovora
-  };
-  const handleLogin = (e) => {
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Email:", email);
-    console.log("Password:", password);
     // Ovde ide logika za autentifikaciju
 
-    login(user.username, user.role);
-    navigate("/dashboard");
+    const res = await fetch('http://127.0.0.1:8000/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      console.error("Login failed");
+      return;
+    }
 
+    const resData = await res.json();
+    const { token, user } = resData;
+
+    login(user.email, user.role, token); // Pozivamo login funkciju iz AuthContext
+    console.log("Login successful", { email: user.email, role: user.role, token });
+    navigate("/dashboard");
   };
 
   return (
