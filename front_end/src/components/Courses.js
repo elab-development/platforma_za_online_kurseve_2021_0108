@@ -1,24 +1,37 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FaUserGraduate, FaBookOpen, FaCode, FaPaintBrush, FaRobot, FaDatabase, FaReact, FaPython, FaShieldAlt, FaGlobe } from "react-icons/fa";
 import Sidebar from "./Sidebar";
+import { api } from '../api/api-client';
+import { AuthContext } from "../context/AuthContext";
 
-const allCourses = [
-  { title: "Kompletan JavaScript Kurs 2022", instructor: "Marko Petrović", link: "#", icon: <FaCode /> },
-  { title: "Online HTML & CSS kurs", instructor: "Ivana Jovanović", link: "#", icon: <FaGlobe /> },
-  { title: "React od nule do heroja", instructor: "Nikola Stojanović", link: "#", icon: <FaReact /> },
-  { title: "Python za početnike", instructor: "Ana Milovanović", link: "#", icon: <FaPython /> },
-  { title: "Full Stack Web Development", instructor: "Stefan Lazić", link: "#", icon: <FaDatabase /> },
-  { title: "Machine Learning", instructor: "Marko Petrović", link: "#", icon: <FaRobot /> },
-  { title: "UX/UI Design Masterclass", instructor: "Ivana Jovanović", link: "#", icon: <FaPaintBrush /> },
-  { title: "Cyber Security Basics", instructor: "Nikola Stojanović", link: "#", icon: <FaShieldAlt /> }
-];
-
-const uniqueInstructors = [...new Set(allCourses.map(course => course.instructor))];
 
 const Courses = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 4;
   const [filteredInstructor, setFilteredInstructor] = useState(null);
+  const [allCourses, setAllCourses] = useState([]);
+  const { user } = useContext(AuthContext)
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const { data: { data } } = await api.get('/courses', {
+        headers: {
+          Authorization: `Bearer ${user?.token}` // Koristimo token iz AuthContext
+        }
+      });
+
+      setAllCourses(data.map(course => ({
+        title: course.title,
+        instructor: course.teacher.name,
+        link: '#',
+        icon: [<FaCode />, <FaRobot />, <FaDatabase />, <FaReact />].sort(() => Math.random() - 0.5)[0] // Randomly assign an icon
+      })))
+    };
+
+    fetchCourses();
+  }, []);
+
+  const uniqueInstructors = [...new Set(allCourses.map(course => course.instructor))];
 
   const filteredCourses = filteredInstructor
     ? allCourses.filter(course => course.instructor === filteredInstructor)

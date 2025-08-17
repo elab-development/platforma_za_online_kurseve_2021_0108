@@ -1,38 +1,39 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { FaBookOpen } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import { AuthContext } from "../context/AuthContext";
+import { api } from "../api/api-client";
 
-const sampleCourses = [
-  {
-    id: 1,
-    name: "Osnove Programiranja",
-    description: "Naučite osnove programiranja kroz praktične primere.",
-    image: "https://source.unsplash.com/300x200/?programming",
-  },
-  {
-    id: 2,
-    name: "Web Development",
-    description: "Postanite stručnjak za frontend i backend web razvoj.",
-    image: "https://source.unsplash.com/300x200/?web",
-  },
-  {
-    id: 3,
-    name: "Baze Podataka",
-    description: "Naučite kako da dizajnirate i upravljate bazama podataka.",
-    image: "https://source.unsplash.com/300x200/?database",
-  },
-  {
-    id: 4,
-    name: "Veštačka Inteligencija",
-    description: "Upoznajte principe i algoritme veštačke inteligencije.",
-    image: "https://source.unsplash.com/300x200/?ai",
-  },
-];
 
 const CoursesList = () => {
   const { user } = useContext(AuthContext);
-  const courses = sampleCourses;
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const { data: { data } } = await api.get('/courses', {
+          headers: {
+            Authorization: `Bearer ${user?.token}` // Koristimo token iz AuthContext
+          }
+        });
+        setCourses(
+          data
+            .filter(course => course?.teacher?.id === user?.id)
+            .map(course => ({
+            id: course.id,
+            name: course.title,
+            description: course.description,
+            image: "https://source.unsplash.com/300x200/?" + ['ai', 'programming', 'design', 'data'].sort(() => Math.random() - 0.5)[0],
+          }))
+      );
+      } catch (error) {
+        console.error("Failed to fetch courses", error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   return (
     <div style={styles.container}>

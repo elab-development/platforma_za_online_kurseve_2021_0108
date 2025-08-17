@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext"; // Adjust the path as necessary
+import { api } from "../api/api-client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -12,24 +13,20 @@ const Login = () => {
     e.preventDefault();
     // Ovde ide logika za autentifikaciju
 
-    const res = await fetch('http://127.0.0.1:8000/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) {
+    try {
+      const {data} = await api.post("/login", {
+        email,
+        password,
+      });
+      const { token, user } = data;
+
+      login(user.id, user.email, user.role, token); // Pozivamo login funkciju iz AuthContext
+      console.log("Login successful", { email: user.email, role: user.role, token });
+      navigate("/dashboard");
+    } catch (error) {
       console.error("Login failed");
       return;
     }
-
-    const resData = await res.json();
-    const { token, user } = resData;
-
-    login(user.email, user.role, token); // Pozivamo login funkciju iz AuthContext
-    console.log("Login successful", { email: user.email, role: user.role, token });
-    navigate("/dashboard");
   };
 
   return (

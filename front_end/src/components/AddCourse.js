@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaPlusCircle, FaFileUpload, FaTimes } from "react-icons/fa";
+import { api } from "../api/api-client";
+import { AuthContext } from "../context/AuthContext";
 
 const AddCourse = () => {
   const navigate = useNavigate();
   const [courseData, setCourseData] = useState({
     title: "",
     description: "",
-    materials: [],
   });
+  const { user } = useContext(AuthContext);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,8 +30,25 @@ const AddCourse = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    api.post('/courses', {
+      ...courseData,
+      teacher_id: user.id,
+    }, {
+      headers: {
+        Authorization: `Bearer ${user.token}` // Koristimo token iz AuthContext
+      }
+    });
+
     console.log("Novi kurs:", courseData);
     // Dodaj logiku za slanje podataka na server
+
+    setCourseData({
+      title: "",
+      description: "",
+      materials: [],
+    });
+    navigate("/courses-list");
   };
 
   const handleRemoveFile = (fileName) => {
@@ -66,7 +85,7 @@ const AddCourse = () => {
             placeholder="Unesite opis kursa"
           />
         </div>
-        <div style={styles.formGroup}>
+        {/* <div style={styles.formGroup}>
           <label style={styles.label}>Materijali kursa:</label>
           <div style={styles.fileInputWrapper}>
             <input type="file" onChange={handleFileChange} multiple style={styles.inputFile} />
@@ -86,7 +105,7 @@ const AddCourse = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
         <div style={styles.buttonContainer}>
           <button type="submit" style={styles.submitButton}>
             <FaPlusCircle style={styles.icon} /> Dodaj kurs
