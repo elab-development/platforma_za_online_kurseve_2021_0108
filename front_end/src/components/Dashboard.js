@@ -1,7 +1,7 @@
 import React from "react";
-import Sidebar from "./Sidebar"; // Add this line to import the Sidebar component
-import { FaBookOpen, FaLaptop, FaUserGraduate, FaChartLine } from "react-icons/fa"; // Import icons
-//import useTitle from "./UseTitle"; // Ispravan import
+import Sidebar from "./Sidebar"; 
+import { FaBookOpen, FaLaptop, FaUserGraduate, FaChartLine } from "react-icons/fa"; 
+
 
 
 
