@@ -35,7 +35,7 @@ class ForgotPasswordController extends Controller
         'created_at' => Carbon::now(),
     ]);
 
-    // Opcionalno: Ovdde možete poslati email korisniku sa tokenom
+    // Ovde možemo poslati email korisniku sa tokenom
 
     return response()->json([
         'message' => 'Reset link sent!',

@@ -10,17 +10,13 @@ use App\Policies\CoursePolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
+    // Registruj sve politike
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
+    //Konnfiguracija URL za resetovanje lozinke i definisanje Gate-a
 
 
     public function boot()

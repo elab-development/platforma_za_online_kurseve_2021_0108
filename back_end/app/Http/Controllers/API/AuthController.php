@@ -10,7 +10,7 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    // ✅ Registracija korisnika
+    //  Registracija korisnika
     public function register(Request $request)
     {
         $request->validate([
@@ -30,7 +30,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'User registered successfully!'], 201);
     }
 
-    // ✅ Prijava korisnika
+    //  Prijava korisnika
     public function login(Request $request)
     {
         $request->validate([
@@ -55,14 +55,14 @@ class AuthController extends Controller
         ]);
     }
 
-    // ✅ Odjava korisnika
+    //  Odjava korisnika
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
         return response()->json(['message' => 'Logged out']);
     }
 
-    // ✅ Dohvatanje informacija o trenutno prijavljenom korisniku
+    //  Dohvatanje informacija o trenutno prijavljenom korisniku
     public function me(Request $request)
     {
         return response()->json($request->user());

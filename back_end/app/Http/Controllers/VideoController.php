@@ -51,9 +51,6 @@ class VideoController extends Controller
         
         $course = Course::findOrFail($courseId);
         
-       // if ($user->cannot('uploadVideo', $course)) {
-        //    return response()->json(['error' => 'Only teachers can upload videos for their courses'], 403);
-       // }
         
         $request->validate([
             'video' => 'required|mimes:mp4,mov,avi|max:50000',

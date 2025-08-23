@@ -18,7 +18,7 @@ class ResetPasswordController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
     
-        // Dohvatamo token iz baze
+        // Uzimamo token iz baze
         $record = DB::table('password_reset_tokens')
                     ->where('email', $request->email)
                     ->first();
@@ -27,7 +27,7 @@ class ResetPasswordController extends Controller
             return response()->json(['error' => 'Invalid or expired token'], 400);
         }
     
-        // Proveravamo da li uneti token odgovara hashiranom tokenu u bazi
+        // Proveravamo da li uneti token odgovara tokenu u bazi
         if (!hash_equals($record->token, hash('sha256', $request->token))) {
             return response()->json(['error' => 'Invalid token'], 400);
         }
