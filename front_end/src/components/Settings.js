@@ -2,22 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Check, UserCircle } from "lucide-react";
 import Sidebar from './Sidebar'; 
-
+import { AuthContext } from "../context/AuthContext";
+import { useContext } from "react";
 const Settings = () => {
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem('userData')) || {
-    username: "Filip", 
-    role: "student",
-    email: "filip@gmail.com",
-    ime: "Filip",
-    prezime: "Kostić"
-  };
+  const { user } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
-    firstName: user.ime,
-    lastName: user.prezime,
-    username: user.username,
+    name: user.name,
     email: user.email,
     role: user.role,
   });
@@ -40,44 +33,21 @@ const Settings = () => {
       <div style={styles.mainContent}>
         <h2 style={styles.mainTitle}>Vaš nalog</h2>
         <form style={styles.form} onSubmit={handleSubmit}>
+            
           <div style={styles.inputGroup}>
-            <UserCircle size={20} className="input-icon" />
+            <User size={20} className="input-icon" />
             <input
               type="text"
-              name="firstName"
-              placeholder="Ime"
-              value={formData.firstName}
+              name="name"
+              placeholder="Ime i prezime"
+              value={formData.name}
               onChange={handleChange}
               style={styles.input}
               required
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <User size={20} className="input-icon" />
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Prezime"
-              value={formData.lastName}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <User size={20} className="input-icon" />
-            <input
-              type="text"
-              name="username"
-              placeholder="Korisničko ime"
-              value={formData.username}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
-          </div>
+      
 
           <div style={styles.inputGroup}>
             <Mail size={20} className="input-icon" />
