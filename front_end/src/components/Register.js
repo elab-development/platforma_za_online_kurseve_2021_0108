@@ -1,4 +1,5 @@
 import React, { useState, useContext } from "react";
+import { Link } from "react-router-dom"; // ← koristi Link za pouzdan povratak
 import { api } from "../api/api-client";
 import { AuthContext } from "../context/AuthContext";
 
@@ -9,7 +10,7 @@ const Register = () => {
     name: "",        // Ime i prezime (jedno polje)
     email: "",
     password: "",
-    role: "student", // "student" | "teacher" | "admin" (po potrebi)
+    role: "student", // "student" | "teacher" | "admin"
     agree: false,
   });
 
@@ -42,12 +43,12 @@ const Register = () => {
         token: data.token,
       });
       alert("Registracija uspešna!");
-      // opcionalno: redirect na /login ili /courses
-      // navigate("/courses");
+      // može odmah na login
+      // (Link ispod svakako radi, ali ovo je korisno posle uspešne registracije)
+      // window.location.href = "/login";
     } catch (err) {
       console.error(err);
-      const msg =
-        err.response?.data?.message || "Greška pri registraciji.";
+      const msg = err.response?.data?.message || "Greška pri registraciji.";
       alert(msg);
     } finally {
       setLoading(false);
@@ -87,6 +88,7 @@ const Register = () => {
           value={form.password}
           onChange={onChange}
           required
+          minLength={6}
         />
 
         <select
@@ -97,7 +99,7 @@ const Register = () => {
         >
           <option value="student">Student</option>
           <option value="teacher">Nastavnik</option>
-          {/* <option value="admin">Admin</option>  // ostavi ako želiš ručno kreiranje admina */}
+          <option value="admin">Admin</option>
         </select>
 
         <label style={styles.checkboxRow}>
@@ -113,6 +115,12 @@ const Register = () => {
         <button type="submit" style={styles.submit} disabled={loading}>
           {loading ? "Slanje..." : "Registracija"}
         </button>
+
+        <Link to="/login" style={{ textDecoration: "none" }}>
+          <button type="button" style={styles.backButton}>
+            ← Nazad na prijavu
+          </button>
+        </Link>
       </form>
     </div>
   );
@@ -138,6 +146,7 @@ const styles = {
   title: {
     textAlign: "center",
     marginBottom: 16,
+    color: "#1e3a8a",
   },
   input: {
     width: "100%",
@@ -162,8 +171,21 @@ const styles = {
     color: "white",
     cursor: "pointer",
     fontWeight: 600,
+    marginBottom: 10,
+  },
+  backButton: {
+    width: "100%",
+    padding: "12px 14px",
+    border: "none",
+    borderRadius: 8,
+    background: "#475569",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 600,
   },
 };
 
 export default Register;
+
+
 

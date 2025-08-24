@@ -31,7 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses', [CourseController::class, 'index']); // Prikaz svih kurseva
     Route::get('/courses/{course}', [CourseController::class, 'show']); // Prikaz jednog kursa
     Route::post('/courses', [CourseController::class, 'store'])->middleware('can:create,App\Models\Course'); // Kreiranje kursa (samo nastavnici)
-    Route::put('/courses/{course}', [CourseController::class, 'update'])->middleware('can:updateCourse,course'); // Ažuriranje kursa (samo nastavnici)
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,App\Models\Course'); // Brisanje kursa (samo nastavnici)
 
     //  Video lekcije
