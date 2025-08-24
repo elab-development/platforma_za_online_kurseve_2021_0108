@@ -1,191 +1,269 @@
 import React, { useState, useContext } from "react";
-import { Link } from "react-router-dom"; // ← koristi Link za pouzdan povratak
-import { api } from "../api/api-client";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { api } from "../api/api-client";
 
 const Register = () => {
   const { setUser } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    name: "",        // Ime i prezime (jedno polje)
+    name: "",
     email: "",
     password: "",
-    role: "student", // "student" | "teacher" | "admin"
-    agree: false,
+    role: "student",
   });
-
   const [loading, setLoading] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
-  const onChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.agree) {
-      alert("Potrebno je označiti saglasnost.");
-      return;
-    }
     setLoading(true);
+
     try {
-      const { data } = await api.post("/register", {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        role: form.role,
-      });
-      // backend vraća token i user
+      const res = await api.post("/register", form);
+
+      // uspeh: postavi user + token i idi na dashboard
       setUser({
-        id: data.user.id,
-        username: data.user.name, // ako negde koristiš username u UI-ju
-        role: data.user.role,
-        token: data.token,
+        ...(res.data?.data?.user ?? res.data?.user),
+        token: res.data?.data?.token ?? res.data?.token,
       });
-      alert("Registracija uspešna!");
-      // može odmah na login
-      // (Link ispod svakako radi, ali ovo je korisno posle uspešne registracije)
-      // window.location.href = "/login";
+      navigate("/dashboard");
     } catch (err) {
-      console.error(err);
-      const msg = err.response?.data?.message || "Greška pri registraciji.";
-      alert(msg);
+      const d = err.response?.data;
+      // Prikaži tačne poruke iz backenda (bez generičkog "validation failed")
+      if (d?.errors) {
+        const msgs = [];
+        for (const k in d.errors) msgs.push(`${k}: ${d.errors[k].join(", ")}`);
+        alert(msgs.join("\n"));
+      } else if (d?.message) {
+        alert(d.message);
+      }
+      console.error("Greška pri registraciji:", d || err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.wrapper}>
-      <form onSubmit={onSubmit} style={styles.card}>
-        <h1 style={styles.title}>Registracija</h1>
+    <div style={styles.wrap}>
+      <div style={styles.card}>
+        <div style={styles.header}>
+          <div style={styles.badge}>eLearn</div>
+          <h1 style={styles.title}>Kreiraj nalog</h1>
+          <p style={styles.subtitle}>
+            Dobrodošao/la! Popuni podatke ispod i pridruži se platformi.
+          </p>
+        </div>
 
-        <input
-          style={styles.input}
-          type="text"
-          name="name"
-          placeholder="Ime i prezime"
-          value={form.name}
-          onChange={onChange}
-          required
-        />
-
-        <input
-          style={styles.input}
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={onChange}
-          required
-        />
-
-        <input
-          style={styles.input}
-          type="password"
-          name="password"
-          placeholder="Lozinka"
-          value={form.password}
-          onChange={onChange}
-          required
-          minLength={6}
-        />
-
-        <select
-          name="role"
-          value={form.role}
-          onChange={onChange}
-          style={styles.input}
-        >
-          <option value="student">Student</option>
-          <option value="teacher">Nastavnik</option>
-          <option value="admin">Admin</option>
-        </select>
-
-        <label style={styles.checkboxRow}>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label} htmlFor="name">Ime i prezime</label>
           <input
-            type="checkbox"
-            name="agree"
-            checked={form.agree}
-            onChange={onChange}
+            id="name"
+            type="text"
+            name="name"
+            placeholder="npr. Pera Perić"
+            value={form.name}
+            onChange={handleChange}
+            required
+            style={styles.input}
           />
-          <span style={{ marginLeft: 8 }}>Registrujem se u eLearn</span>
-        </label>
 
-        <button type="submit" style={styles.submit} disabled={loading}>
-          {loading ? "Slanje..." : "Registracija"}
-        </button>
+          <label style={styles.label} htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="npr. pera@example.com"
+            value={form.email}
+            onChange={handleChange}
+            required
+            style={styles.input}
+          />
 
-        <Link to="/login" style={{ textDecoration: "none" }}>
-          <button type="button" style={styles.backButton}>
-            ← Nazad na prijavu
+          <label style={styles.label} htmlFor="password">Lozinka</label>
+          <div style={styles.pwRow}>
+            <input
+              id="password"
+              type={showPw ? "text" : "password"}
+              name="password"
+              placeholder="Najmanje 6 karaktera"
+              value={form.password}
+              onChange={handleChange}
+              required
+              style={{ ...styles.input, marginBottom: 0, flex: 1 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((s) => !s)}
+              style={styles.pwToggle}
+              aria-label={showPw ? "Sakrij lozinku" : "Prikaži lozinku"}
+            >
+              {showPw ? "Sakrij" : "Prikaži"}
+            </button>
+          </div>
+
+          <label style={styles.label} htmlFor="role">Uloga</label>
+          <select
+            id="role"
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            style={styles.select}
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Nastavnik</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <button type="submit" disabled={loading} style={styles.submit}>
+            {loading ? "Kreiram nalog..." : "Registruj se u eLearn"}
           </button>
-        </Link>
-      </form>
+        </form>
+
+        <div style={styles.footer}>
+          Već imaš nalog?{" "}
+          <Link to="/" style={styles.link}>
+            Prijavi se
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };
 
+// ——— Stilovi (bez eksternih biblioteka) ———
 const styles = {
-  wrapper: {
-    display: "flex",
+  wrap: {
     minHeight: "100vh",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f4f7fc",
+    display: "grid",
+    placeItems: "center",
+    background:
+      "radial-gradient(70% 70% at 20% 0%, #eef2ff 0%, #e2e8f0 45%, #f8fafc 100%)",
     padding: 16,
   },
   card: {
     width: "100%",
     maxWidth: 520,
-    background: "white",
-    borderRadius: 12,
-    padding: 24,
-    boxShadow: "0 8px 24px rgba(0,0,0,.08)",
+    background: "#ffffff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    boxShadow: "0 10px 30px rgba(30,58,138,0.10)",
+    overflow: "hidden",
   },
-  title: {
-    textAlign: "center",
-    marginBottom: 16,
-    color: "#1e3a8a",
+  header: {
+    padding: "24px 24px 8px 24px",
+    background:
+      "linear-gradient(135deg, rgba(30,58,138,0.07), rgba(99,102,241,0.06))",
   },
-  input: {
-    width: "100%",
-    padding: "12px 14px",
-    borderRadius: 8,
-    border: "1px solid #d1d5db",
-    marginBottom: 12,
-    outline: "none",
-  },
-  checkboxRow: {
-    display: "flex",
-    alignItems: "center",
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  submit: {
-    width: "100%",
-    padding: "12px 14px",
-    border: "none",
-    borderRadius: 8,
+  badge: {
+    display: "inline-block",
     background: "#1e3a8a",
-    color: "white",
-    cursor: "pointer",
-    fontWeight: 600,
+    color: "#fff",
+    fontWeight: 700,
+    letterSpacing: 0.3,
+    borderRadius: 999,
+    padding: "6px 12px",
+    fontSize: 12,
     marginBottom: 10,
   },
-  backButton: {
-    width: "100%",
+  title: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 24,
+    fontWeight: 800,
+  },
+  subtitle: {
+    margin: "6px 0 0 0",
+    color: "#475569",
+    fontSize: 14,
+  },
+  form: {
+    padding: 24,
+    display: "grid",
+    gap: 12,
+  },
+  label: {
+    fontSize: 13,
+    color: "#334155",
+    fontWeight: 600,
+  },
+  input: {
     padding: "12px 14px",
-    border: "none",
-    borderRadius: 8,
-    background: "#475569",
-    color: "white",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    outline: "none",
+    background: "#f8fafc",
+    transition: "box-shadow .15s, border-color .15s",
+    fontSize: 14,
+  },
+  pwRow: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  pwToggle: {
+    whiteSpace: "nowrap",
+    padding: "12px 14px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    background: "#eef2ff",
+    color: "#1e3a8a",
     cursor: "pointer",
     fontWeight: 600,
+  },
+  select: {
+    padding: "12px 14px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    background: "#f8fafc",
+    fontSize: 14,
+    outline: "none",
+  },
+  submit: {
+    marginTop: 8,
+    padding: "12px 16px",
+    background:
+      "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+    color: "#fff",
+    border: "none",
+    borderRadius: 12,
+    fontWeight: 700,
+    cursor: "pointer",
+    boxShadow: "0 6px 16px rgba(59,130,246,0.35)",
+  },
+  footer: {
+    padding: "0 24px 20px 24px",
+    color: "#475569",
+    fontSize: 14,
+  },
+  link: {
+    color: "#1e3a8a",
+    fontWeight: 700,
+    textDecoration: "none",
   },
 };
 
+// Fokus stilovi (opciono možeš prebaciti u CSS ako želiš)
+(() => {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    input:focus, select:focus {
+      border-color: #93c5fd !important;
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.15) !important;
+      background: #fff !important;
+    }
+    button:disabled { opacity: .7; cursor: not-allowed; }
+  `;
+  if (typeof document !== "undefined") document.head.appendChild(style);
+})();
+
 export default Register;
+
+
 
 
 

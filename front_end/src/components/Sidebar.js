@@ -9,7 +9,7 @@ const Sidebar = () => {
     const { logout } = useAuth(); 
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
-    const location = useLocation();  // Dodato za praćenje aktivne stranice
+    const location = useLocation();  // za aktivnu stranicu
 
     if (!user) return null; 
 
@@ -62,8 +62,8 @@ const Sidebar = () => {
                 )}
                 {user.role === "student" && (
                     <li 
-                        onClick={() => navigate("/courses-list")} 
-                        className={location.pathname === "/courses-list" ? "active" : ""}
+                        onClick={() => navigate("/my-classes")} 
+                        className={location.pathname === "/my-classes" ? "active" : ""}
                         style={styles.menuItem}
                     >
                         <FaUserGraduate /> Moji časovi
@@ -148,3 +148,4 @@ const styles = {
 };
 
 export default Sidebar;
+

@@ -1,153 +1,169 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, Mail, Check, UserCircle } from "lucide-react";
-import Sidebar from './Sidebar'; 
+import React, { useContext, useEffect, useState } from "react";
+import Sidebar from "./Sidebar";
 import { AuthContext } from "../context/AuthContext";
-import { useContext } from "react";
+import { api } from "../api/api-client";
+
 const Settings = () => {
-  const navigate = useNavigate();
+  const { user, setUser } = useContext(AuthContext);
+  const [form, setForm] = useState({ name: "", email: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
 
-  const { user } = useContext(AuthContext);
+  // Učitaj trenutno ulogovanog korisnika iz baze
+  useEffect(() => {
+    const load = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      setMsg(null);
+      try {
+        const res = await api.get(`/users/${user.id}`, {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        });
+        const u = res.data;
+        setForm({ name: u.name ?? "", email: u.email ?? "" });
+      } catch (e) {
+        // Bez prikaza greške korisniku
+        console.error("Greška pri učitavanju profila:", e?.response?.data || e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
-  const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Podaci su sačuvani!");
-    navigate("/dashboard");
+    if (!user?.id) return;
+    setSaving(true);
+    setMsg(null);
+
+    try {
+      const res = await api.put(
+        `/users/${user.id}`,
+        { name: form.name, email: form.email },
+        { headers: { Authorization: `Bearer ${user?.token}` } }
+      );
+      const updated = res.data?.user ?? {};
+      // Sačuvaj u kontekstu (zadrži token!)
+      setUser({ ...(user || {}), ...updated, token: user?.token });
+      setMsg(res.data?.message || "Profil je uspešno sačuvan.");
+    } catch (e) {
+      // Bez prikaza greške korisniku
+      console.error("Greška pri čuvanju profila:", e?.response?.data || e.message);
+      // Po želji: može ostati tiho bez poruke
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div style={styles.container}>
-        <Sidebar />
+    <div style={styles.wrap}>
+      <Sidebar />
+      <div style={styles.content}>
+        <h1 style={styles.title}>Podešavanja</h1>
 
-      <div style={styles.mainContent}>
-        <h2 style={styles.mainTitle}>Vaš nalog</h2>
-        <form style={styles.form} onSubmit={handleSubmit}>
-            
-          <div style={styles.inputGroup}>
-            <User size={20} className="input-icon" />
-            <input
-              type="text"
-              name="name"
-              placeholder="Ime i prezime"
-              value={formData.name}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
-          </div>
+        {loading ? (
+          <div style={styles.card}>Učitavanje…</div>
+        ) : (
+          <form onSubmit={handleSubmit} style={styles.formCard}>
+            <div style={styles.row}>
+              <label htmlFor="name" style={styles.label}>Ime i prezime</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={form.name}
+                onChange={handleChange}
+                required
+                style={styles.input}
+                placeholder="npr. Pera Perić"
+              />
+            </div>
 
-      
+            <div style={styles.row}>
+              <label htmlFor="email" style={styles.label}>Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                style={styles.input}
+                placeholder="pera@example.com"
+              />
+            </div>
 
-          <div style={styles.inputGroup}>
-            <Mail size={20} className="input-icon" />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              style={styles.input}
-              required
-            />
-          </div>
-
-          <div style={styles.inputGroup}>
-            <User size={20} className="input-icon" />
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              style={styles.select}
-            >
-              <option value="student">Student</option>
-              <option value="teacher">Nastavnik</option>
-              <option value="admin">Administrator</option>
-            </select>
-          </div>
-
-          <button type="submit" style={styles.submitButton}>
-            <Check size={20} className="btn-icon" /> Potvrdite
-          </button>
-        </form>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <button type="submit" disabled={saving} style={styles.saveBtn}>
+                {saving ? "Čuvam…" : "Sačuvaj promene"}
+              </button>
+              {msg && <span style={{ ...styles.badge, ...styles.success }}>{msg}</span>}
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
 };
 
 const styles = {
-  container: {
+  wrap: {
     display: "flex",
     minHeight: "100vh",
-    backgroundColor: "#f4f7fc",
+    background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
   },
-  mainContent: {
-    flex: 1,
-    padding: "40px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
+  content: { flex: 1, padding: 20 },
+  title: { color: "#1e3a8a", marginBottom: 12, fontWeight: 800 },
+
+  formCard: {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: 16,
+    boxShadow: "0 10px 24px rgba(30,58,138,0.06)",
+    maxWidth: 520,
   },
-  mainTitle: {
-    fontSize: "30px",
-    fontWeight: "bold",
-    color: "#1e3a8a",
-    marginBottom: "30px",
+  card: {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: 16,
+    color: "#334155",
+    maxWidth: 520,
   },
-  form: {
-    width: "100%",
-    maxWidth: "600px",
-    background: "white",
-    padding: "30px",
-    borderRadius: "10px",
-    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-    display: "flex",
-    flexDirection: "column",
-  },
-  inputGroup: {
-    display: "flex",
-    alignItems: "center",
-    marginBottom: "15px",
-  },
+  row: { display: "grid", gap: 6, marginBottom: 12 },
+  label: { fontSize: 13, color: "#334155", fontWeight: 600 },
   input: {
-    flex: 1,
-    padding: "10px",
-    marginLeft: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "5px",
-    fontSize: "16px",
+    padding: "12px 14px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    outline: "none",
+    background: "#f8fafc",
   },
-  select: {
-    flex: 1,
-    padding: "10px",
-    marginLeft: "10px",
-    border: "1px solid #ddd",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-  submitButton: {
-    padding: "12px",
-    backgroundColor: "#007bff",
-    color: "white",
+  saveBtn: {
+    padding: "12px 16px",
+    background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+    color: "#fff",
     border: "none",
-    borderRadius: "5px",
+    borderRadius: 12,
+    fontWeight: 700,
     cursor: "pointer",
-    fontSize: "16px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: "20px",
-  }
+    boxShadow: "0 6px 16px rgba(59,130,246,0.35)",
+  },
+  badge: {
+    padding: "8px 10px",
+    borderRadius: 8,
+    fontSize: 13,
+    border: "1px solid",
+  },
+  success: { background: "#ecfdf5", color: "#065f46", borderColor: "#10b981" },
 };
 
 export default Settings;
+
+

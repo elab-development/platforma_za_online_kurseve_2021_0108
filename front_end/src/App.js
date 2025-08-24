@@ -12,6 +12,9 @@ import Courses from "./components/Courses";
 import Settings from "./components/Settings";
 import AllUsers from "./components/AllUsers";
 
+// NOVO
+import MyClasses from "./components/MyClasses";
+
 const ProtectedRoute = ({ element }) => {
   const { user } = useContext(AuthContext);
   return user ? element : <Navigate to="/" />;
@@ -32,6 +35,9 @@ function App() {
           <Route path="/courses" element={<ProtectedRoute element={<Courses />} />} />
           <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
           <Route path="/all-users" element={<ProtectedRoute element={<AllUsers />} />} />
+          
+          {/* NOVO: Moji časovi */}
+          <Route path="/my-classes" element={<ProtectedRoute element={<MyClasses />} />} />
         </Routes>
       </Router>
     </AuthProvider>

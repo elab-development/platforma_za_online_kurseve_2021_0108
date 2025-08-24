@@ -9,10 +9,14 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\API\ResetPasswordController;
+
 //  Autentifikacija
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::post('/login', [AuthController::class, 'login']);
+
+// ✅ DODATO: ultra jednostavan reset lozinke (email + nova lozinka + potvrda)
+Route::post('/reset-password-simple', [AuthController::class, 'resetPasswordSimple']);
 
 Route::get('/forgot-password', [ForgotPasswordController::class,'getView'])->middleware('guest')->name('password.request');
 
@@ -31,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/courses', [CourseController::class, 'index']); // Prikaz svih kurseva
     Route::get('/courses/{course}', [CourseController::class, 'show']); // Prikaz jednog kursa
     Route::post('/courses', [CourseController::class, 'store'])->middleware('can:create,App\Models\Course'); // Kreiranje kursa (samo nastavnici)
-    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,App\Models\Course'); // Brisanje kursa (samo nastavnici)
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,course');
 
     //  Prijave na kurs (samo studenti mogu)
     Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'store'])->middleware('can:enroll,course');
@@ -56,7 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/courses/{course}/certificate', [CertificateController::class, 'generateCertificate']);
+        Route::get('/courses/{course}/certificate', [CertificateController::class, 'generateCertificate']);
     });
 
 });
+

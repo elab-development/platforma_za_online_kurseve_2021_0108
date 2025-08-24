@@ -1,32 +1,63 @@
-import React from "react";
-import Sidebar from "./Sidebar"; // Adjust the path as necessary
+import React, { useContext, useEffect, useState } from "react";
+import Sidebar from "./Sidebar";
+import { AuthContext } from "../context/AuthContext";
+import { FaAward } from "react-icons/fa";
 
 const CertificatesPage = () => {
-  const certificates = [
-    { title: "Osnovni kurs React.js", date: "Jan 2025", issuer: "eLearn Platforma" },
-    { title: "Napredni kurs JavaScript-a", date: "Feb 2025", issuer: "eLearn Platforma" },
-    { title: "Kurs za razvoj aplikacija", date: "Mar 2025", issuer: "eLearn Platforma" },
-    // Dodajte još sertifikata po potrebi
-  ];
+  const { user } = useContext(AuthContext);
+  const [certs, setCerts] = useState([]);
+
+  const certKey = `certificates_${user?.id ?? "guest"}`;
+
+  const load = () => {
+    try {
+      const raw = localStorage.getItem(certKey);
+      const list = raw ? JSON.parse(raw) : [];
+      setCerts(Array.isArray(list) ? list : []);
+    } catch {
+      setCerts([]);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // kada se vrati na tab, osveži
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div style={styles.container}>
-      <Sidebar></Sidebar>
-      <div style={styles.mainContent}>
-        <h2 style={styles.pageTitle}>Moji sertifikati</h2>
-        <div style={styles.certificateList}>
-          {certificates.map((certificate, index) => (
-            <div key={index} style={styles.certificateItem}>
-              <h3 style={styles.certificateTitle}>{certificate.title}</h3>
-              <p style={styles.certificateDetails}>
-                Izdato: {certificate.date} | Izdavač: {certificate.issuer}
-              </p>
-            </div>
-          ))}
-        </div>
-        <footer style={styles.footer}>
-          <p>&copy; {new Date().getFullYear()} eLearn. Sva prava zadržana.</p>
-        </footer>
+      <Sidebar />
+      <div style={styles.content}>
+        <h1 style={styles.title}><FaAward style={{ marginRight: 10 }} /> Sertifikati</h1>
+
+        {certs.length === 0 ? (
+          <div style={styles.emptyBox}>
+            Nemate još uvek nijedan sertifikat.
+          </div>
+        ) : (
+          <div style={styles.grid}>
+            {certs.map((c) => (
+              <div key={c.id} style={styles.card}>
+                <div style={styles.ribbon}>
+                  <FaAward />
+                </div>
+                <div style={styles.cardBody}>
+                  <h3 style={styles.certTitle}>Sertifikat za {c.courseTitle}</h3>
+                  <p style={styles.meta}>
+                    Izdato za korisnika: <strong>{user?.username}</strong>
+                  </p>
+                  <p style={styles.metaLight}>
+                    Datum: {new Date(c.issuedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -36,59 +67,64 @@ const styles = {
   container: {
     display: "flex",
     minHeight: "100vh",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    backgroundColor: "#f4f7fc",
+    background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
   },
-  mainContent: {
-    flex: 1,
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  pageTitle: {
-    fontSize: "28px",
-    fontWeight: "600",
-    marginBottom: "20px",
-    textAlign: "center",
-    color: "#333",
-  },
-  certificateList: {
-    width: "80%",
-    maxWidth: "800px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-  },
-  certificateItem: {
+  content: { flex: 1, padding: 20 },
+  title: { display: "flex", alignItems: "center", color: "#1e3a8a", marginBottom: 12 },
+
+  emptyBox: {
     background: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-    textAlign: "center",
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    padding: 16,
+    color: "#334155",
   },
-  certificateTitle: {
-    fontSize: "20px",
-    fontWeight: "600",
-    color: "#333",
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: 20,
   },
-  certificateDetails: {
-    fontSize: "16px",
-    color: "#555",
-    marginTop: "5px",
+  card: {
+    position: "relative",
+    background: "#eef2ff",
+    border: "1px solid #c7d2fe",
+    borderRadius: 16,
+    boxShadow: "0 4px 14px rgba(30,58,138,0.08)",
+    overflow: "hidden",
   },
-  footer: {
-    textAlign: "center",
+  ribbon: {
+    position: "absolute",
+    top: 0,
+    right: 0,
     background: "#1e3a8a",
-    color: "white",
-    width: "100%",
-    borderTopLeftRadius: "2px",
-    borderTopRightRadius: "2px",
-    marginTop: "20px",
-    padding: "2px",
-    fontSize: "12px",
+    color: "#fff",
+    padding: "10px 12px",
+    borderBottomLeftRadius: 12,
+    fontSize: 18,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardBody: {
+    padding: 16,
+  },
+  certTitle: {
+    margin: "0 0 6px 0",
+    color: "#0f172a",
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  meta: {
+    margin: "6px 0 2px 0",
+    color: "#334155",
+  },
+  metaLight: {
+    margin: 0,
+    color: "#64748b",
+    fontSize: 14,
   },
 };
 
 export default CertificatesPage;
+

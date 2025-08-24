@@ -3,49 +3,64 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class ResetPasswordController extends Controller
 {
+    /**
+     * GET /reset-password/{token}
+     * Samo informativno – vraća token da front zna šta da pošalje na POST.
+     */
+    public function getView(Request $request, string $token)
+    {
+        return response()->json([
+            'message' => 'Pošaljite POST /reset-password sa { token, email, password, password_confirmation }',
+            'token'   => $token,
+        ]);
+    }
+
+    /**
+     * POST /reset-password
+     * Resetuje lozinku na osnovu tokena.
+     * Telo: { token, email, password, password_confirmation }
+     */
     public function reset(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'token' => 'required',
-            'password' => 'required|min:8|confirmed',
+            'token'                 => ['required'],
+            'email'                 => ['required', 'email'],
+            'password'              => ['required', 'confirmed', 'min:6'],
         ]);
-    
-        // Uzimamo token iz baze
-        $record = DB::table('password_reset_tokens')
-                    ->where('email', $request->email)
-                    ->first();
-    
-        if (!$record) {
-            return response()->json(['error' => 'Invalid or expired token'], 400);
-        }
-    
-        // Proveravamo da li uneti token odgovara tokenu u bazi
-        if (!hash_equals($record->token, hash('sha256', $request->token))) {
-            return response()->json(['error' => 'Invalid token'], 400);
-        }
-    
-        // Resetujemo lozinku
-        $user = User::where('email', $request->email)->first();
-        $user->password = Hash::make($request->password);
-        $user->save();
-    
-        // Brišemo token iz baze
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-    
-        return response()->json(['message' => 'Password has been reset.']);
-    }
-    public function getView(string $token){
-        return view('auth.reset-password', ['token' => $token]);
-    }
 
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user) use ($request) {
+                $user->forceFill([
+                    'password' => Hash::make($request->password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json([
+                'message' => 'Lozinka je uspešno resetovana. Sada se možete prijaviti novom lozinkom.',
+                'status'  => __($status),
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Reset lozinke nije uspeo.',
+            'status'  => __($status),
+        ], 400);
+    }
 }
+
 
 

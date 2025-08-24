@@ -5,58 +5,46 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use App\Models\User;
-use Carbon\Carbon;
 
 class ForgotPasswordController extends Controller
 {
+    /**
+     * GET /forgot-password
+     * Samo informativno – front ionako pogađa POST endpoint.
+     */
+    public function getView(Request $request)
+    {
+        return response()->json([
+            'message' => 'Za reset lozinke pošaljite POST /forgot-password sa { "email": "..." }'
+        ]);
+    }
+
+    /**
+     * POST /forgot-password
+     * Prima { email } i šalje reset link (ako je email u bazi).
+     */
     public function sendResetLink(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
 
-    $user = User::where('email', $request->email)->first();
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
 
-    if (!$user) {
-        return response()->json(['error' => 'User not found'], 404);
-    }
-
-    // Generišemo token
-    $token = Str::random(60);
-
-    // Brišemo postojeći token ako postoji
-    DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-
-    // Čuvamo token u bazi
-    DB::table('password_reset_tokens')->insert([
-        'email' => $request->email,
-        'token' => hash('sha256', $token), // Laravel hashira token
-        'created_at' => Carbon::now(),
-    ]);
-
-    // Ovde možemo poslati email korisniku sa tokenom
-
-    return response()->json([
-        'message' => 'Reset link sent!',
-        'token' => $token, // OVO JE ORIGINALNI TOKEN, NE HASHIRANI
-    ]);
-    }
-
-
-    public function generateToken(Request $request)
-    {
-        $user = User::where('email', $request->input('email'))->first();
-        if ($user) {
-            $token = Password::createToken($user);
-            return response()->json(['token' => $token]);
-        } else {
-            return response()->json(['error' => 'User not found'], 404);
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json([
+                'message' => 'Link za reset lozinke je poslat na email.',
+                'status'  => __($status),
+            ]);
         }
-    }
-    public function getView(){
-        return view('auth.forgot-password');
-    }
 
+        return response()->json([
+            'message' => 'Nije moguće poslati link za reset lozinke.',
+            'status'  => __($status),
+        ], 400);
+    }
 }
+
 

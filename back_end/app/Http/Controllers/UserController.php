@@ -4,65 +4,64 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Resources\UserResource;
-
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class UserController extends Controller
 {
-    use AuthorizesRequests;
-    //  Prikaz svih korisnika (samo admin)
+    /**
+     * GET /users
+     * Admin: listanje (student+teacher). Ako već koristiš, ostavi.
+     */
     public function index()
     {
-        $this->authorize('viewAny', User::class);
-        return UserResource::collection(User::all());
+        $users = User::query()
+            ->select('id', 'name', 'email', 'role')
+            ->whereIn('role', ['student', 'teacher'])
+            ->orderBy('role')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['data' => $users]);
     }
 
-    //  Prikaz pojedinačnog korisnika
+    /**
+     * GET /users/{user}
+     * Prikaz jednog korisnika (za Settings stranicu)
+     */
     public function show(User $user)
     {
-        return new UserResource($user->load(['courses', 'enrollments']));
+        return response()->json($user);
     }
 
-    //  Ažuriranje profila (samo vlasnik ili admin)
+    /**
+     * PUT /users/{user}
+     * Ažuriranje profila – name/email (admin takođe može role da menja).
+     */
     public function update(Request $request, User $user)
     {
-        $this->authorize('update', $user);
-
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|unique:users,email,' . $user->id,
-            'password' => 'sometimes|string|min:6'
+            'name'  => ['sometimes','string','max:50'],
+            'email' => ['sometimes','email','max:255','unique:users,email,'.$user->id],
+            'role'  => ['sometimes','in:student,teacher,admin'],
         ]);
-
-        if (!empty($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        }
 
         $user->update($validated);
 
-        return new UserResource($user);
+        return response()->json([
+            'message' => 'User updated successfully.',
+            'user'    => $user,
+        ]);
     }
 
-    //  Brisanje korisnika (samo admin)
+    /**
+     * DELETE /users/{user}
+     */
     public function destroy(User $user)
     {
-        $this->authorize('delete', $user);
+        $user->tokens()?->delete();
         $user->delete();
 
-        return response()->json(['message' => 'User deleted']);
-    }
-
-    // 🎓 Kursevi koje student pohađa
-    public function enrolledCourses(User $user)
-    {
-        return response()->json($user->enrollments->map(fn($e) => $e->course));
-    }
-
-    // 📚 Kursevi koje nastavnik predaje
-    public function teachingCourses(User $user)
-    {
-        return response()->json($user->courses);
+        return response()->json(['message' => 'User deleted successfully.']);
     }
 }
+
+
