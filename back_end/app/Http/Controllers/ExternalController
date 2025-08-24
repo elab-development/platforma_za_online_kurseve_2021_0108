@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\Http;
+
+class ExternalController extends Controller
+{
+    public function quote()
+    {
+        // Najjednostavniji javni API: https://api.adviceslip.com/advice
+        try {
+            $resp = Http::timeout(4)->retry(1, 200)->get('https://api.adviceslip.com/advice');
+            if ($resp->ok()) {
+                $d = $resp->json();
+                $text = $d['slip']['advice'] ?? null;
+                if ($text) {
+                    return response()->json([
+                        'text'   => $text,
+                        'author' => 'AdviceSlip',
+                        'source' => 'https://api.adviceslip.com/advice'
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignorišemo i padamo na fallback
+        }
+
+        // Fallback – uvek nešto vrati da se vidi na frontu
+        return response()->json([
+            'text'   => 'Uči danas, uspeh dolazi sutra.',
+            'author' => 'eLearn',
+            'source' => 'local-fallback'
+        ]);
+    }
+}
+

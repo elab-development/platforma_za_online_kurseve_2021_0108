@@ -9,6 +9,8 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\API\ForgotPasswordController;
 use App\Http\Controllers\API\ResetPasswordController;
+use App\Http\Controllers\ExternalController;
+
 
 //  Autentifikacija
 Route::post('/register', [AuthController::class, 'register']);
@@ -58,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //  Download/export sertifikata
     Route::get('/certificates/{certificate}/download', [CertificateController::class, 'export']);
 
+    Route::get('/external/quote', [ExternalController::class, 'quote']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/courses/{course}/certificate', [CertificateController::class, 'generateCertificate']);

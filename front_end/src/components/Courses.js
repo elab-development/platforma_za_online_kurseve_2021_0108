@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
   FaUserGraduate,
   FaBookOpen,
@@ -22,6 +22,10 @@ const Courses = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredInstructor, setFilteredInstructor] = useState("");
+
+  // --- KLIJENTSKA PAGINACIJA (NIŠTA NA BACKENDU NE MENJAMO) ---
+  const [page, setPage] = useState(1);
+  const perPage = 4;
 
   // — YouTube pretraga (playlist sa više videa)
   const youtubeLinkFor = (title) => {
@@ -55,7 +59,7 @@ const Courses = () => {
     return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
   };
 
-  // — Učitaj listu kurseva sa backenda
+  // — Učitaj listu kurseva sa backenda (OSTAJE KAO KOD TEBE)
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -126,7 +130,7 @@ const Courses = () => {
       saveWatched([item, ...current]);
     }
 
-    // Sertifikat (mock) – samo dodamo karticu sa nazivom
+    // Sertifikat (mock)
     const now = new Date().toISOString();
     const certs = getCerts();
     if (!certs.some((c) => c.id === course.id)) {
@@ -151,14 +155,23 @@ const Courses = () => {
       await api.delete(`/courses/${courseId}`, {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
+
+      // skini iz lokalnog stanja (kao i ranije)
       setAllCourses((prev) => prev.filter((c) => c.id !== courseId));
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
 
-      // očisti i iz localStorage-a ako je bio „gledan“/„sertifikat“
+      // očisti i localStorage
       const current = getWatched().filter((c) => c.id !== courseId);
       saveWatched(current);
       const certs = getCerts().filter((c) => c.id !== courseId);
       saveCerts(certs);
+
+      // ako posle brisanja nema više stavki na trenutnoj strani, idi na prethodnu (ako postoji)
+      setTimeout(() => {
+        const totalAfter = applyFilters(allCourses.filter((c) => c.id !== courseId)).length;
+        const lastPageAfter = Math.max(1, Math.ceil(totalAfter / perPage));
+        setPage((p) => Math.min(p, lastPageAfter));
+      }, 0);
 
       alert("Kurs je uspešno obrisan.");
     } catch (err) {
@@ -187,13 +200,30 @@ const Courses = () => {
     return out;
   };
 
+  // kad se promene filteri, resetuj na prvu stranu
   useEffect(() => {
-    setCourses(applyFilters(allCourses));
-  }, [allCourses, searchTerm, filteredInstructor]);
+    const filtered = applyFilters(allCourses);
+    setCourses(filtered);
+    setPage(1);
+  }, [allCourses, searchTerm, filteredInstructor]); // eslint-disable-line
 
   const clearSearch = () => setSearchTerm("");
   const onSearchKeyDown = (e) => { if (e.key === "Enter") handleSearch(); };
   const handleSearch = () => setSearchTerm(searchTerm.trim());
+
+  // — Izračun paginacije nad već filtriranim rezultatima
+  const { visibleCourses, totalPages, totalCount } = useMemo(() => {
+    const total = courses.length;
+    const last = Math.max(1, Math.ceil(total / perPage));
+    const safePage = Math.min(Math.max(1, page), last);
+    const start = (safePage - 1) * perPage;
+    const end = start + perPage;
+    return {
+      visibleCourses: courses.slice(start, end),
+      totalPages: last,
+      totalCount: total,
+    };
+  }, [courses, page]);
 
   return (
     <div style={styles.container}>
@@ -256,7 +286,7 @@ const Courses = () => {
         </div>
 
         <div style={styles.coursesGrid}>
-          {courses.map((course) => (
+          {visibleCourses.map((course) => (
             <div key={course.id} style={styles.courseCard}>
               <div style={styles.iconContainer}>{course.icon}</div>
               <h3 style={styles.courseTitle}>
@@ -293,6 +323,27 @@ const Courses = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* PAGINACIJA (klijentska) */}
+        <div style={styles.pager}>
+          <button
+            style={styles.pageBtn}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+          >
+            ← Prethodna
+          </button>
+          <span>
+            Strana {Math.min(page, totalPages)} / {totalPages} • {totalCount} kurs(eva)
+          </span>
+          <button
+            style={styles.pageBtn}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            Sledeća →
+          </button>
         </div>
       </div>
     </div>
@@ -385,9 +436,26 @@ const styles = {
     cursor: "pointer",
     textDecoration: "none",
   },
+  pager: {
+    marginTop: 20,
+    display: "flex",
+    gap: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pageBtn: {
+    padding: "8px 12px",
+    background: "#e2e8f0",
+    border: "none",
+    borderRadius: 8,
+    fontWeight: 600,
+    cursor: "pointer",
+  },
 };
 
 export default Courses;
+
+
 
 
 
