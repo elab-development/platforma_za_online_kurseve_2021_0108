@@ -1,137 +1,169 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { api } from "../api/api-client";
+import { AuthContext } from "../context/AuthContext";
 
 const Register = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    password: "",
+  const { setUser } = useContext(AuthContext);
+
+  const [form, setForm] = useState({
+    name: "",        // Ime i prezime (jedno polje)
     email: "",
-    role: "student",
-    agreeToTerms: false,
+    password: "",
+    role: "student", // "student" | "teacher" | "admin" (po potrebi)
+    agree: false,
   });
-  const [errors, setErrors] = useState({ password: "" });
 
-  const handleChange = (e) => {
+  const [loading, setLoading] = useState(false);
+
+  const onChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
-
-    if (name === "password" && value.length < 6) {
-      setErrors((prev) => ({ ...prev, password: "Lozinka mora imati bar 6 karaktera!" }));
-    } else {
-      setErrors((prev) => ({ ...prev, password: "" }));
-    }
+    setForm((f) => ({ ...f, [name]: type === "checkbox" ? checked : value }));
   };
 
-  const handleSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password.length < 6) {
-      alert("Lozinka mora imati bar 6 karaktera!");
+    if (!form.agree) {
+      alert("Potrebno je označiti saglasnost.");
       return;
     }
-    localStorage.setItem("userRole", formData.role);
-    alert("Uspešna registracija!");
-    navigate("/account");
+    setLoading(true);
+    try {
+      const { data } = await api.post("/register", {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      });
+      // backend vraća token i user
+      setUser({
+        id: data.user.id,
+        username: data.user.name, // ako negde koristiš username u UI-ju
+        role: data.user.role,
+        token: data.token,
+      });
+      alert("Registracija uspešna!");
+      // opcionalno: redirect na /login ili /courses
+      // navigate("/courses");
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err.response?.data?.message || "Greška pri registraciji.";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Registracija</h2>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <input type="text" name="firstName" placeholder="Ime" value={formData.firstName} onChange={handleChange} required style={styles.input} />
-          <input type="text" name="lastName" placeholder="Prezime" value={formData.lastName} onChange={handleChange} required style={styles.input} />
-          <input type="text" name="username" placeholder="Korisničko ime" value={formData.username} onChange={handleChange} required style={styles.input} />
-          <input type="password" name="password" placeholder="Lozinka" value={formData.password} onChange={handleChange} required style={styles.input} />
-          {errors.password && <p style={styles.errorText}>{errors.password}</p>}
-          <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required style={styles.input} />
-          <select name="role" value={formData.role} onChange={handleChange} required style={styles.input}>
-            <option value="student">Student</option>
-            <option value="teacher">Nastavnik</option>
-            <option value="admin">Administrator</option>
-          </select>
-          <div style={styles.checkboxContainer}>
-            <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} />
-            <label>Registrujem se u eLearn</label>
-          </div>
-          <button type="submit" disabled={!formData.agreeToTerms} style={styles.button}>Registracija</button>
-        </form>
-        <button onClick={() => navigate("/")} style={styles.linkButton}>Već imate nalog? Prijavite se</button>
-      </div>
+    <div style={styles.wrapper}>
+      <form onSubmit={onSubmit} style={styles.card}>
+        <h1 style={styles.title}>Registracija</h1>
+
+        <input
+          style={styles.input}
+          type="text"
+          name="name"
+          placeholder="Ime i prezime"
+          value={form.name}
+          onChange={onChange}
+          required
+        />
+
+        <input
+          style={styles.input}
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={onChange}
+          required
+        />
+
+        <input
+          style={styles.input}
+          type="password"
+          name="password"
+          placeholder="Lozinka"
+          value={form.password}
+          onChange={onChange}
+          required
+        />
+
+        <select
+          name="role"
+          value={form.role}
+          onChange={onChange}
+          style={styles.input}
+        >
+          <option value="student">Student</option>
+          <option value="teacher">Nastavnik</option>
+          {/* <option value="admin">Admin</option>  // ostavi ako želiš ručno kreiranje admina */}
+        </select>
+
+        <label style={styles.checkboxRow}>
+          <input
+            type="checkbox"
+            name="agree"
+            checked={form.agree}
+            onChange={onChange}
+          />
+          <span style={{ marginLeft: 8 }}>Registrujem se u eLearn</span>
+        </label>
+
+        <button type="submit" style={styles.submit} disabled={loading}>
+          {loading ? "Slanje..." : "Registracija"}
+        </button>
+      </form>
     </div>
   );
 };
 
 const styles = {
-  container: {
+  wrapper: {
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
     minHeight: "100vh",
-    backgroundColor: "#f7f7f7",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#f4f7fc",
+    padding: 16,
   },
   card: {
-    width: "350px",
-    backgroundColor: "#fff",
-    padding: "30px",
-    borderRadius: "15px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    textAlign: "center",
+    width: "100%",
+    maxWidth: 520,
+    background: "white",
+    borderRadius: 12,
+    padding: 24,
+    boxShadow: "0 8px 24px rgba(0,0,0,.08)",
   },
   title: {
-    fontSize: "24px",
-    color: "#333",
-    marginBottom: "20px",
-    fontWeight: "600",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
+    textAlign: "center",
+    marginBottom: 16,
   },
   input: {
-    margin: "12px 0",
-    padding: "12px",
-    fontSize: "16px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    marginBottom: 12,
     outline: "none",
-    transition: "border-color 0.3s",
   },
-  errorText: {
-    color: "red",
-    fontSize: "12px",
-    marginBottom: "10px",
-  },
-  checkboxContainer: {
+  checkboxRow: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    margin: "10px 0",
+    marginTop: 4,
+    marginBottom: 12,
   },
-  button: {
-    padding: "12px",
-    background: "#007bff",
+  submit: {
+    width: "100%",
+    padding: "12px 14px",
+    border: "none",
+    borderRadius: 8,
+    background: "#1e3a8a",
     color: "white",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "16px",
     cursor: "pointer",
-    transition: "background-color 0.3s",
-  },
-  linkButton: {
-    background: "none",
-    border: "none",
-    color: "#007bff",
-    fontSize: "14px",
-    cursor: "pointer",
-    textDecoration: "underline",
-    marginTop: "15px",
+    fontWeight: 600,
   },
 };
 
 export default Register;
+

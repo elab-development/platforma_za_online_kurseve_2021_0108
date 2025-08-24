@@ -1,58 +1,103 @@
 import React, { useContext, useEffect, useState } from "react";
-import { FaUserGraduate, FaBookOpen, FaCode, FaPaintBrush, FaRobot, FaDatabase, FaReact, FaPython, FaShieldAlt, FaGlobe } from "react-icons/fa";
+import {
+  FaUserGraduate,
+  FaBookOpen,
+  FaCode,
+  FaRobot,
+  FaDatabase,
+  FaReact,
+  FaTrash,
+  FaSearch,
+  FaTimes
+} from "react-icons/fa";
 import Sidebar from "./Sidebar";
-import { api } from '../api/api-client';
+import { api } from "../api/api-client";
 import { AuthContext } from "../context/AuthContext";
-
 
 const Courses = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 4;
+
   const [filteredInstructor, setFilteredInstructor] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // <-- NOVO
   const [allCourses, setAllCourses] = useState([]);
-  const { user } = useContext(AuthContext)
+
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const { data: { data } } = await api.get('/courses', {
-        headers: {
-          Authorization: `Bearer ${user?.token}` // Koristimo token iz AuthContext
-        }
-      });
+      try {
+        const {
+          data: { data },
+        } = await api.get("/courses", {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
 
-      setAllCourses(data.map(course => ({
-        title: course.title,
-        instructor: course.teacher.name,
-        link: '#',
-        icon: [<FaCode />, <FaRobot />, <FaDatabase />, <FaReact />].sort(() => Math.random() - 0.5)[0] // Randomly assign an icon
-      })))
+        setAllCourses(
+          data.map((course) => ({
+            id: course.id,
+            title: course.title,
+            instructor: course.teacher?.name ?? "Nastavnik",
+            teacherId: course.teacher?.id,
+            link: "#",
+            icon: [<FaCode />, <FaRobot />, <FaDatabase />, <FaReact />].sort(
+              () => Math.random() - 0.5
+            )[0],
+          }))
+        );
+      } catch (e) {
+        console.error("Greška pri učitavanju kurseva:", e);
+      }
     };
 
     fetchCourses();
-  }, []);
+  }, [user?.token]);
 
-  const uniqueInstructors = [...new Set(allCourses.map(course => course.instructor))];
+  const uniqueInstructors = [...new Set(allCourses.map((c) => c.instructor))];
 
-  const filteredCourses = filteredInstructor
-    ? allCourses.filter(course => course.instructor === filteredInstructor)
-    : allCourses;
+  // --- Filtriranje: prvo po nazivu (pretraga), pa po nastavniku ---
+  const normalized = (s) => (s ?? "").toString().trim().toLowerCase();
 
+  const applyFilters = (list) => {
+    let out = list;
+
+    if (normalized(searchTerm).length > 0) {
+      const q = normalized(searchTerm);
+      out = out.filter((c) => normalized(c.title).startsWith(q));
+    }
+
+    if (filteredInstructor) {
+      out = out.filter((c) => c.instructor === filteredInstructor);
+    }
+
+    return out;
+  };
+
+  const filteredCourses = applyFilters(allCourses);
+
+  // --- Paginacija ---
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
-  const currentCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
+  const currentCourses = filteredCourses.slice(
+    indexOfFirstCourse,
+    indexOfLastCourse
+  );
 
   const nextPage = () => {
     if (indexOfLastCourse < filteredCourses.length) {
-      setCurrentPage(currentPage + 1);
+      setCurrentPage((p) => p + 1);
     }
   };
 
   const prevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      setCurrentPage((p) => p - 1);
     }
   };
 
+  // --- UI akcije ---
   const handleInstructorClick = (instructor) => {
     setFilteredInstructor(instructor);
     setCurrentPage(1);
@@ -63,12 +108,84 @@ const Courses = () => {
     setCurrentPage(1);
   };
 
+  const handleSearch = () => {
+    setCurrentPage(1);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  // --- Brisanje kursa ---
+  const handleDeleteCourse = async (courseId) => {
+    const sure = window.confirm("Da li ste sigurni da želite da obrišete kurs?");
+    if (!sure) return;
+
+    try {
+      await api.delete(`/courses/${courseId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+
+      setAllCourses((prev) => prev.filter((c) => c.id !== courseId));
+      alert("Kurs je uspešno obrisan.");
+    } catch (err) {
+      console.error("DELETE /courses error:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
+      alert(
+        err.response?.data?.message ??
+          err.response?.data?.error ??
+          "Greška prilikom brisanja kursa."
+      );
+    }
+  };
+
+  const canDelete = (course) =>
+    user?.role === "admin" ||
+    (user?.role === "teacher" && user?.id && user.id === course.teacherId);
+
+  // Enter u polju za pretragu -> pozovi pretragu
+  const onSearchKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
+
   return (
     <div style={styles.container}>
       <Sidebar />
       <div style={styles.mainContent}>
         <div style={styles.dashboardContent}>
-          <h1 style={styles.title}><FaBookOpen /> Kursevi</h1>
+          <h1 style={styles.title}>
+            <FaBookOpen /> Kursevi
+          </h1>
+
+          {/* --- PRETRAGA KURSA (NOVO) --- */}
+          <div style={styles.searchBar}>
+            <label htmlFor="courseSearch" style={styles.searchLabel}>
+              Pretraži kurs:
+            </label>
+            <input
+              id="courseSearch"
+              type="text"
+              placeholder="npr. 'ja' za 'JavaScript osnove'"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={onSearchKeyDown}
+              style={styles.searchInput}
+            />
+            <button onClick={handleSearch} style={styles.searchButton}>
+              <FaSearch style={{ marginRight: 6 }} />
+              Pretraži
+            </button>
+            {searchTerm && (
+              <button onClick={clearSearch} style={styles.clearButton}>
+                <FaTimes style={{ marginRight: 6 }} />
+                Poništi
+              </button>
+            )}
+          </div>
 
           {/* Lista nastavnika sa klikabilnim filterima */}
           <div style={styles.instructorsList}>
@@ -78,35 +195,78 @@ const Courses = () => {
                 onClick={() => handleInstructorClick(instructor)}
                 style={{
                   ...styles.instructorButton,
-                  ...(filteredInstructor === instructor ? styles.activeInstructor : {}),
+                  ...(filteredInstructor === instructor
+                    ? styles.activeInstructor
+                    : {}),
                 }}
               >
                 <FaUserGraduate style={styles.instructorIcon} /> {instructor}
               </button>
             ))}
-            {filteredInstructor && (
-              <button onClick={resetFilter} style={styles.resetButton}>Prikaži sve</button>
+            {(filteredInstructor || searchTerm) && (
+              <button onClick={resetFilter} style={styles.resetButton}>
+                Prikaži sve
+              </button>
             )}
           </div>
 
+          {/* Grid kurseva */}
           <div style={styles.coursesGrid}>
-            {currentCourses.map((course, index) => (
-              <div key={index} style={styles.courseCard}>
+            {currentCourses.map((course) => (
+              <div key={course.id} style={styles.courseCard}>
                 <div style={styles.courseInfo}>
                   <h3 style={styles.courseTitle}>
                     {course.icon} {course.title}
                   </h3>
-                  <p style={styles.instructor}><FaUserGraduate /> {course.instructor}</p>
-                  <a href={course.link} style={styles.button}>Pogledaj kurs</a>
+                  <p style={styles.instructor}>
+                    <FaUserGraduate /> {course.instructor}
+                  </p>
+
+                  {/* Pogledaj kurs */}
+                  <a href={course.link} style={styles.button}>
+                    Pogledaj kurs
+                  </a>
+
+                  {/* Obriši kurs (samo ovlašćeni) */}
+                  {canDelete(course) && (
+                    <button
+                      onClick={() => handleDeleteCourse(course.id)}
+                      style={{
+                        ...styles.button,
+                        backgroundColor: "#dc2626",
+                        marginLeft: 8,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                      title="Obriši kurs"
+                    >
+                      <FaTrash />
+                      Obriši
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Paginacija */}
           <div style={styles.pagination}>
-            <button onClick={prevPage} disabled={currentPage === 1} style={styles.pageButton}>← Prethodna</button>
+            <button
+              onClick={prevPage}
+              disabled={currentPage === 1}
+              style={styles.pageButton}
+            >
+              ← Prethodna
+            </button>
             <span> Stranica {currentPage} </span>
-            <button onClick={nextPage} disabled={indexOfLastCourse >= filteredCourses.length} style={styles.pageButton}>Sledeća →</button>
+            <button
+              onClick={nextPage}
+              disabled={indexOfLastCourse >= filteredCourses.length}
+              style={styles.pageButton}
+            >
+              Sledeća →
+            </button>
           </div>
         </div>
       </div>
@@ -140,8 +300,50 @@ const styles = {
     fontSize: "30px",
     fontWeight: "bold",
     color: "#1e3a8a",
-    marginBottom: "20px",
+    marginBottom: "16px",
   },
+
+  // --- Stilovi za pretragu ---
+  searchBar: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    justifyContent: "center",
+    marginBottom: "16px",
+    flexWrap: "wrap",
+  },
+  searchLabel: {
+    fontWeight: "bold",
+  },
+  searchInput: {
+    minWidth: "260px",
+    padding: "10px",
+    border: "1px solid #cbd5e1",
+    borderRadius: "6px",
+    outline: "none",
+  },
+  searchButton: {
+    padding: "10px 14px",
+    backgroundColor: "#1e3a8a",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+  },
+  clearButton: {
+    padding: "10px 14px",
+    backgroundColor: "#6b7280",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+  },
+
+  // — Nastavnici filter
   instructorsList: {
     display: "flex",
     flexWrap: "wrap",
@@ -174,11 +376,13 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
   },
+
+  // — Grid
   coursesGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
     gap: "20px",
-    marginTop: "20px",
+    marginTop: "10px",
   },
   courseCard: {
     background: "#eef2ff",
@@ -186,6 +390,11 @@ const styles = {
     borderRadius: "10px",
     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     textAlign: "center",
+  },
+  courseInfo: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
   },
   courseTitle: {
     fontSize: "18px",
@@ -205,6 +414,8 @@ const styles = {
     cursor: "pointer",
     textDecoration: "none",
   },
+
+  // — Paginacija
   pagination: {
     marginTop: "20px",
   },
@@ -216,7 +427,8 @@ const styles = {
     color: "white",
     cursor: "pointer",
     borderRadius: "5px",
-  }
+  },
 };
 
 export default Courses;
+
