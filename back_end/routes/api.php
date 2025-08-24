@@ -33,16 +33,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/courses', [CourseController::class, 'store'])->middleware('can:create,App\Models\Course'); // Kreiranje kursa (samo nastavnici)
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,App\Models\Course'); // Brisanje kursa (samo nastavnici)
 
-    //  Video lekcije
-    Route::get('/courses/{course}/videos', [VideoController::class, 'index']);
-    Route::get('/courses/{course}/videos/{video}', [VideoController::class, 'show']);
-    Route::post('/courses/{course}/videos', [VideoController::class, 'store'])->middleware('can:create,App\Models\Video,course');    
     //  Prijave na kurs (samo studenti mogu)
     Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'store'])->middleware('can:enroll,course');
 
     //  Sertifikati
     Route::get('/users/{user}/certificates', [CertificateController::class, 'index']);
-    Route::get('/certificates/{certificate}', [CertificateController::class, 'show']);
 
     //  Korisnici
     Route::get('/users', [UserController::class, 'index'])->middleware('can:viewAny,App\Models\User'); // Svi korisnici (admin)
