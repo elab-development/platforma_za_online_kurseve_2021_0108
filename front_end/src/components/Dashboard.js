@@ -144,12 +144,14 @@ const styles = {
   quoteText: { fontSize: "18px", fontStyle: "italic", lineHeight: 1.5 },
   quoteAuthor: { marginTop: "8px", fontWeight: 700, color: "#1e3a8a" },
 
+  // ⬇️ Jedina bitna promena: fiksno 2 kolone (2 gore + 2 dole)
   infoSection: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: "20px",
     marginTop: "20px",
   },
+
   infoBox: {
     background: "#eef2ff",
     padding: "20px",
@@ -173,4 +175,5 @@ const styles = {
 };
 
 export default Dashboard;
+
 
