@@ -18,21 +18,23 @@ class Course extends Model
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function videos(): HasMany
-    {
-        return $this->hasMany(Video::class);
-    }
+    // ❌ uklonjeno:
+    // public function videos(): HasMany { ... }
 
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
     }
+
+    // (ostalo ostavljeno kako je bilo, iako logika dozvola obično ide u Policy)
     public function create(User $user)
     {
-        return $user->role === 'teacher'; // Ili bilo koja logika koja se odnosi na dozvole
-    }
-    public function updateCourse(User $user, Course $course){
         return $user->role === 'teacher';
     }
 
+    public function updateCourse(User $user, Course $course)
+    {
+        return $user->role === 'teacher';
+    }
 }
+

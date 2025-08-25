@@ -8,7 +8,7 @@ import {
   FaReact,
   FaTrash,
   FaSearch,
-  FaTimes
+  FaTimes,
 } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import { api } from "../api/api-client";
@@ -23,11 +23,11 @@ const Courses = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredInstructor, setFilteredInstructor] = useState("");
 
-  // --- KLIJENTSKA PAGINACIJA (NIŠTA NA BACKENDU NE MENJAMO) ---
+  // Klijentska paginacija
   const [page, setPage] = useState(1);
   const perPage = 4;
 
-  // — YouTube pretraga (playlist sa više videa)
+  // — YouTube pretraga (playlist)
   const youtubeLinkFor = (title) => {
     const t = (title || "").toLowerCase();
     const map = [
@@ -59,13 +59,11 @@ const Courses = () => {
     return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
   };
 
-  // — Učitaj listu kurseva sa backenda (OSTAJE KAO KOD TEBE)
+  // — Učitaj kurseve
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const {
-          data: { data },
-        } = await api.get("/courses", {
+        const { data: { data } } = await api.get("/courses", {
           headers: { Authorization: `Bearer ${user?.token}` },
         });
 
@@ -90,60 +88,88 @@ const Courses = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // — LocalStorage helpers (per-user) za „Moji časovi“
+  // LocalStorage helpers (per-user) — “Moji časovi”
   const watchedKey = `watchedCourses_${user?.id ?? "guest"}`;
   const getWatched = () => {
-    try {
-      const raw = localStorage.getItem(watchedKey);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(watchedKey) || "[]"); } catch { return []; }
   };
   const saveWatched = (list) => {
     try { localStorage.setItem(watchedKey, JSON.stringify(list)); } catch {}
   };
 
-  // — LocalStorage helpers (per-user) za „Sertifikate“
+  // LocalStorage helpers — “Sertifikati” (frontend evidencija)
   const certKey = `certificates_${user?.id ?? "guest"}`;
   const getCerts = () => {
-    try {
-      const raw = localStorage.getItem(certKey);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem(certKey) || "[]"); } catch { return []; }
   };
   const saveCerts = (list) => {
     try { localStorage.setItem(certKey, JSON.stringify(list)); } catch {}
   };
 
-  // — Snimi “gledano” i “sertifikat” na klik “Pogledaj kurs”
-  const recordWatchedCourse = (course) => {
-    if (!user) return;
-    if (user.role !== "student") return;
+  // — Backend upis "sertifikata" (minimalno)
+  const saveCertificateToBackend = async (courseId) => {
+    const payload = { certificate: "Sertifikat", course_id: courseId };
+    try {
+      await api.post("/certificates/store", payload, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 404 || status === 405) {
+        await api.post("/certificates", payload, {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        });
+      } else {
+        throw err;
+      }
+    }
+  };
+
+  // — ENROLL: POST /courses/{course}/enroll
+  const enrollInCourse = async (courseId) => {
+    try {
+      await api.post(`/courses/${courseId}/enroll`, null, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+    } catch (e) {
+      // 409/400 ako već postoji — ignoriši
+      if (![400,409].includes(e?.response?.status)) {
+        console.warn("Enroll error:", e?.response?.data || e.message);
+      }
+    }
+  };
+
+  // — Snimi “gledano” i “sertifikat”
+  const recordWatchedCourse = async (course) => {
+    if (!user || user.role !== "student") return;
 
     // Moji časovi
     const current = getWatched();
     if (!current.some((c) => c.id === course.id)) {
-      const item = { id: course.id, title: course.title, instructor: course.instructor };
-      saveWatched([item, ...current]);
+      saveWatched([{ id: course.id, title: course.title, instructor: course.instructor }, ...current]);
     }
 
-    // Sertifikat (mock)
-    const now = new Date().toISOString();
+    // Sertifikat – frontend + backend
     const certs = getCerts();
     if (!certs.some((c) => c.id === course.id)) {
-      const certItem = {
-        id: course.id,
-        courseTitle: course.title,
-        issuedAt: now,
-      };
-      saveCerts([certItem, ...certs]);
+      saveCerts([{ id: course.id, courseTitle: course.title, issuedAt: new Date().toISOString() }, ...certs]);
+      try { await saveCertificateToBackend(course.id); } catch (err) {
+        console.error("Greška pri snimanju sertifikata:", err?.response?.data || err.message);
+      }
     }
   };
 
-  // — Dozvole: obrisati sme SAMO nastavnik-vlasnik kursa
+  // — Klik na “Pogledaj kurs”: prvo ENROLL, pa evidencije, pa otvori YouTube
+  const handleViewCourse = async (course) => {
+    try {
+      await enrollInCourse(course.id);
+      await recordWatchedCourse(course);
+    } finally {
+      window.open(course.link, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  // — Dozvole: brisanje (samo nastavnik vlasnik)
   const canDelete = (course) =>
     user?.role === "teacher" && user?.id && user.id === course.teacherId;
 
@@ -156,17 +182,14 @@ const Courses = () => {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
 
-      // skini iz lokalnog stanja (kao i ranije)
       setAllCourses((prev) => prev.filter((c) => c.id !== courseId));
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
 
-      // očisti i localStorage
       const current = getWatched().filter((c) => c.id !== courseId);
       saveWatched(current);
       const certs = getCerts().filter((c) => c.id !== courseId);
       saveCerts(certs);
 
-      // ako posle brisanja nema više stavki na trenutnoj strani, idi na prethodnu (ako postoji)
       setTimeout(() => {
         const totalAfter = applyFilters(allCourses.filter((c) => c.id !== courseId)).length;
         const lastPageAfter = Math.max(1, Math.ceil(totalAfter / perPage));
@@ -200,7 +223,6 @@ const Courses = () => {
     return out;
   };
 
-  // kad se promene filteri, resetuj na prvu stranu
   useEffect(() => {
     const filtered = applyFilters(allCourses);
     setCourses(filtered);
@@ -211,7 +233,7 @@ const Courses = () => {
   const onSearchKeyDown = (e) => { if (e.key === "Enter") handleSearch(); };
   const handleSearch = () => setSearchTerm(searchTerm.trim());
 
-  // — Izračun paginacije nad već filtriranim rezultatima
+  // — Paginacija
   const { visibleCourses, totalPages, totalCount } = useMemo(() => {
     const total = courses.length;
     const last = Math.max(1, Math.ceil(total / perPage));
@@ -228,7 +250,6 @@ const Courses = () => {
   return (
     <div style={styles.container}>
       <Sidebar />
-
       <div style={styles.content}>
         <h1 style={styles.title}>
           <FaBookOpen style={{ marginRight: 10 }} />
@@ -237,7 +258,9 @@ const Courses = () => {
 
         <div style={styles.filtersRow}>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <label htmlFor="courseSearch" style={{ fontWeight: 600 }}>Pretraga:</label>
+            <label htmlFor="courseSearch" style={{ fontWeight: 600 }}>
+              Pretraga:
+            </label>
             <input
               id="courseSearch"
               type="text"
@@ -298,18 +321,14 @@ const Courses = () => {
               </p>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {/* Pogledaj kurs — snimi i Moje časove i Sertifikat (mock), pa otvori YouTube */}
-                <a
-                  href={course.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
                   style={styles.button}
-                  onClick={() => recordWatchedCourse(course)}
+                  onClick={() => handleViewCourse(course)}
                 >
                   Pogledaj kurs
-                </a>
+                </button>
 
-                {/* Obriši kurs — samo nastavnik vlasnik */}
                 {canDelete(course) && (
                   <button
                     onClick={() => handleDeleteCourse(course.id)}
@@ -325,7 +344,6 @@ const Courses = () => {
           ))}
         </div>
 
-        {/* PAGINACIJA (klijentska) */}
         <div style={styles.pager}>
           <button
             style={styles.pageBtn}
@@ -424,7 +442,13 @@ const styles = {
     transition: "transform .2s ease",
   },
   iconContainer: { fontSize: "38px", color: "#1e3a8a", marginBottom: "8px" },
-  courseTitle: { fontSize: "18px", margin: 0, color: "#0f172a", display: "flex", alignItems: "center" },
+  courseTitle: {
+    fontSize: "18px",
+    margin: 0,
+    color: "#0f172a",
+    display: "flex",
+    alignItems: "center",
+  },
   instructor: { color: "#334155", marginTop: "6px", marginBottom: "12px" },
   button: {
     marginTop: "10px",
@@ -454,11 +478,5 @@ const styles = {
 };
 
 export default Courses;
-
-
-
-
-
-
 
 

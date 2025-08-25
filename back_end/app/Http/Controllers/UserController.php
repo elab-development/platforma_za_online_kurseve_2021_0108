@@ -7,10 +7,7 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    /**
-     * GET /users
-     * Admin: listanje (student+teacher). Ako već koristiš, ostavi.
-     */
+  
     public function index()
     {
         $users = User::query()
@@ -23,19 +20,13 @@ class UserController extends Controller
         return response()->json(['data' => $users]);
     }
 
-    /**
-     * GET /users/{user}
-     * Prikaz jednog korisnika (za Settings stranicu)
-     */
+    
     public function show(User $user)
     {
         return response()->json($user);
     }
 
-    /**
-     * PUT /users/{user}
-     * Ažuriranje profila – name/email (admin takođe može role da menja).
-     */
+ 
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
@@ -52,9 +43,7 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * DELETE /users/{user}
-     */
+  
     public function destroy(User $user)
     {
         $user->tokens()?->delete();

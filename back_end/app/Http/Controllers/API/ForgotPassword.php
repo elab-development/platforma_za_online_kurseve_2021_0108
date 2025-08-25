@@ -8,10 +8,7 @@ use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
 {
-    /**
-     * GET /forgot-password
-     * Samo informativno – front ionako pogađa POST endpoint.
-     */
+   
     public function getView(Request $request)
     {
         return response()->json([
@@ -19,10 +16,6 @@ class ForgotPasswordController extends Controller
         ]);
     }
 
-    /**
-     * POST /forgot-password
-     * Prima { email } i šalje reset link (ako je email u bazi).
-     */
     public function sendResetLink(Request $request)
     {
         $request->validate([

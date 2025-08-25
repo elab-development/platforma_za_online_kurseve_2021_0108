@@ -10,9 +10,7 @@ use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
-    /**
-     * POST /register
-     */
+    
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -38,17 +36,13 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /**
-     * POST /login
-     * Prihvata: { login | email | name | username, password }
-     */
+    
     public function login(Request $request)
     {
         $request->validate([
             'password' => 'required|string',
         ]);
 
-        // Uzmi jedan od podržanih inputa
         $input = $request->input('login')
               ?? $request->input('email')
               ?? $request->input('name')
@@ -60,7 +54,6 @@ class AuthController extends Controller
 
         $inputTrimmed = trim($input);
 
-        // Probaj po email-u (lowercase), pa po name-u, pa po username-u (ako postoji kolona)
         $user = User::where('email', strtolower($inputTrimmed))->first()
              ?? User::where('name', $inputTrimmed)->first()
              ?? (User::where('username', $inputTrimmed)->first() ?? null);
@@ -79,7 +72,6 @@ class AuthController extends Controller
     }
 
     /**
-     * POST /logout
      */
     public function logout(Request $request)
     {
@@ -87,11 +79,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out.']);
     }
 
-    /**
-     * POST /reset-password-simple
-     * { email, password, password_confirmation }
-     * Menja lozinku odmah, briše stare tokene da ne zbunjuju front.
-     */
+
     public function resetPasswordSimple(Request $request)
     {
         $validated = $request->validate([
@@ -105,7 +93,6 @@ class AuthController extends Controller
         $user->password = Hash::make($validated['password']);
         $user->save();
 
-        // očisti sve stare tokene (opciono, ali pomaže da nema zabune sa sesijama)
         $user->tokens()->delete();
 
         return response()->json([

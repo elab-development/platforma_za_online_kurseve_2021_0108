@@ -11,10 +11,7 @@ use Illuminate\Support\Str;
 
 class ResetPasswordController extends Controller
 {
-    /**
-     * GET /reset-password/{token}
-     * Samo informativno – vraća token da front zna šta da pošalje na POST.
-     */
+ 
     public function getView(Request $request, string $token)
     {
         return response()->json([
@@ -23,11 +20,7 @@ class ResetPasswordController extends Controller
         ]);
     }
 
-    /**
-     * POST /reset-password
-     * Resetuje lozinku na osnovu tokena.
-     * Telo: { token, email, password, password_confirmation }
-     */
+ 
     public function reset(Request $request)
     {
         $request->validate([
