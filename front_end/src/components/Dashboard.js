@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "./Sidebar"; 
+import { AuthContext } from "../context/AuthContext";
 import { FaBookOpen, FaLaptop, FaUserGraduate, FaChartLine } from "react-icons/fa"; 
 import { api } from "../api/api-client";
 
 const Dashboard = () => {
+  const { user } = useContext(AuthContext);
   const [quote, setQuote] = useState(null);
   const [qLoading, setQLoading] = useState(true);
 
   useEffect(() => {
     const loadQuote = async () => {
       try {
-        const res = await api.get("/external/quote"); // GET /api/external/quote
+        const res = await api.get("/external/quote", {
+          headers: {
+            Authorization: `Bearer ${user?.token}`
+          }
+        }); // GET /api/external/quote
         if (res?.data?.text) {
           setQuote(res.data);
         } else {
