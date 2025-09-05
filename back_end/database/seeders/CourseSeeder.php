@@ -15,3 +15,4 @@ class CourseSeeder extends Seeder
         Course::factory(10)->create();
     }
 }
+

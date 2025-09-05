@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Course;
+use App\Models\Enrollment;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +21,7 @@ class EnrollmentFactory extends Factory
     {
         return [
             'user_id' => User::where('role', 'student')->inRandomOrder()->first()->id ?? User::factory()->create(['role' => 'student'])->id,
-            'course_id' => Course::inRandomOrder()->first()->id ?? Course::factory()->create()->id,
+            'course_id' => Course::factory()->create()->id,
         ];
     }
 }

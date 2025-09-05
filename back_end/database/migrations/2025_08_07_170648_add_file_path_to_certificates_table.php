@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('certificates', function (Blueprint $table) {
-            $table->string('file_path')->after('id');
+            $table->string('file_path')->default('')->after('id');
         });
     }
     

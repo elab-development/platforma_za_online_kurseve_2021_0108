@@ -1,3 +1,4 @@
+
 import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "./Sidebar"; 
 import { AuthContext } from "../context/AuthContext";
@@ -181,5 +182,3 @@ const styles = {
 };
 
 export default Dashboard;
-
-
