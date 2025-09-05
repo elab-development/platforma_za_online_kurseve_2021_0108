@@ -1,38 +1,48 @@
-
 import React, { useContext, useEffect, useState } from "react";
-import Sidebar from "./Sidebar"; 
+import Sidebar from "./Sidebar";
 import { AuthContext } from "../context/AuthContext";
-import { FaBookOpen, FaLaptop, FaUserGraduate, FaChartLine } from "react-icons/fa"; 
-import { api } from "../api/api-client";
+import { FaBookOpen, FaLaptop, FaUserGraduate, FaChartLine } from "react-icons/fa";
+
+const ZENQUOTES_ENDPOINT = "https://zenquotes.io/api/quotes";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
+
   const [quote, setQuote] = useState(null);
   const [qLoading, setQLoading] = useState(true);
 
+  const keywords = /learn|study|education|knowledge|reading|practice|school|teacher/i;
+
+  const fetchLearningQuote = async () => {
+    setQLoading(true);
+    try {
+      const res = await fetch(`${ZENQUOTES_ENDPOINT}?t=${Date.now()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const arr = await res.json();
+
+      // filtriramo samo citate o učenju
+      const filtered = arr.filter((x) => keywords.test(x.q));
+      const pick = filtered.length
+        ? filtered[Math.floor(Math.random() * filtered.length)]
+        : arr[Math.floor(Math.random() * arr.length)];
+
+      setQuote({
+        text: pick.q,
+        author: pick.a,
+      });
+    } catch (e) {
+      // fallback – uvek edukativno
+      setQuote({
+        text: "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
+        author: "Malcolm X",
+      });
+    } finally {
+      setQLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadQuote = async () => {
-      try {
-        const res = await api.get("/external/quote", {
-          headers: {
-            Authorization: `Bearer ${user?.token}`
-          }
-        }); // GET /api/external/quote
-        if (res?.data?.text) {
-          setQuote(res.data);
-        } else {
-          // fallback ako backend vrati nešto neočekivano
-          setQuote({ text: "Uči danas, uspeh dolazi sutra.", author: "eLearn" });
-        }
-      } catch (e) {
-        console.error("Greška pri učitavanju citata:", e?.response?.data || e.message);
-        // lokalni fallback da UI nikad nije prazan
-        setQuote({ text: "Uči danas, uspeh dolazi sutra.", author: "eLearn" });
-      } finally {
-        setQLoading(false);
-      }
-    };
-    loadQuote();
+    fetchLearningQuote();
   }, []);
 
   return (
@@ -47,56 +57,55 @@ const Dashboard = () => {
             <i>Najbolja platforma za online učenje i napredak.</i>
           </p>
 
-          {/* Motivaciona poruka */}
+          {/* Diskretna motivaciona poruka za učenje */}
           <div style={styles.motivationCard}>
             {qLoading ? (
-              <span style={{ opacity: 0.7 }}>Učitavam motivacionu poruku…</span>
+              <span style={{ opacity: 0.7 }}>Učitavam...</span>
             ) : (
               <>
                 <div style={styles.quoteText}>&ldquo;{quote?.text}&rdquo;</div>
-                <div style={styles.quoteAuthor}>— {quote?.author || "Nepoznat autor"}</div>
+                <div style={styles.quoteAuthor}>— {quote?.author}</div>
               </>
             )}
           </div>
 
+          {/* Info sekcija — ne menjamo */}
           <div style={styles.infoSection}>
             <div style={styles.infoBox}>
               <FaBookOpen style={styles.icon} />
               <h3>Pristupite besplatnim kursevima</h3>
               <p>
-                Svi naši kursevi su u potpunosti besplatni i dostupni svima.  
-                Učite u svom tempu kroz interaktivne video lekcije i edukativne materijale  
-                koji će vam pomoći da proširite svoja znanja.
+                Svi naši kursevi su u potpunosti besplatni i dostupni svima. Učite u svom tempu kroz interaktivne video
+                lekcije i edukativne materijale koji će vam pomoći da proširite svoja znanja.
               </p>
             </div>
             <div style={styles.infoBox}>
               <FaLaptop style={styles.icon} />
               <h3>Učite bilo gde</h3>
               <p>
-                Pristup kursevima je moguć sa bilo kog uređaja – računara,  
-                tableta ili telefona. Sve što vam je potrebno je internet konekcija.  
-                Učenje nikada nije bilo lakše!
+                Pristup kursevima je moguć sa bilo kog uređaja – računara, tableta ili telefona. Sve što vam je potrebno
+                je internet konekcija. Učenje nikada nije bilo lakše!
               </p>
             </div>
             <div style={styles.infoBox}>
               <FaUserGraduate style={styles.icon} />
               <h3>Osvojite sertifikate</h3>
               <p>
-                Po završetku kursa i gledanju svih video lekcija,  
-                automatski dobijate sertifikat koji možete koristiti za unapređenje  
-                svoje karijere ili dalje obrazovanje.
+                Po završetku kursa i gledanju svih video lekcija, automatski dobijate sertifikat koji možete koristiti za
+                unapređenje svoje karijere ili dalje obrazovanje.
               </p>
             </div>
             <div style={styles.infoBox}>
               <FaChartLine style={styles.icon} />
               <h3>Praćenje napretka</h3>
               <p>
-                Pratite svoj napredak kroz kurseve i vidite koliko vam je  
-                ostalo do završetka. Obeležavajte završene lekcije i učite bez stresa!
+                Pratite svoj napredak kroz kurseve i vidite koliko vam je ostalo do završetka. Obeležavajte završene
+                lekcije i učite bez stresa!
               </p>
             </div>
           </div>
         </div>
+
         <footer style={styles.footer}>
           <p>&copy; {new Date().getFullYear()} eLearn. Sva prava zadržana.</p>
         </footer>
@@ -140,25 +149,22 @@ const styles = {
   subtitle: { fontSize: "18px", color: "#555", marginBottom: "18px" },
 
   motivationCard: {
-    background: "linear-gradient(135deg, #eef2ff 0%, #dbeafe 100%)",
-    border: "1px solid #c7d2fe",
-    color: "#0f172a",
-    padding: "16px",
-    borderRadius: "12px",
-    boxShadow: "0px 2px 8px rgba(0,0,0,0.08)",
+    background: "#f8faff",
+    borderLeft: "4px solid #1e3a8a",
+    padding: "12px 16px",
     marginBottom: "18px",
+    borderRadius: "6px",
+    color: "#1e293b",
   },
-  quoteText: { fontSize: "18px", fontStyle: "italic", lineHeight: 1.5 },
-  quoteAuthor: { marginTop: "8px", fontWeight: 700, color: "#1e3a8a" },
+  quoteText: { fontSize: "16px", fontStyle: "italic", marginBottom: 6, lineHeight: 1.5 },
+  quoteAuthor: { fontSize: "14px", fontWeight: 600, color: "#334155" },
 
-  // ⬇️ Jedina bitna promena: fiksno 2 kolone (2 gore + 2 dole)
   infoSection: {
     display: "grid",
     gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: "20px",
     marginTop: "20px",
   },
-
   infoBox: {
     background: "#eef2ff",
     padding: "20px",
@@ -168,13 +174,12 @@ const styles = {
     transition: "transform 0.3s ease",
   },
   icon: { fontSize: "40px", color: "#1e3a8a", marginBottom: "10px" },
+
   footer: {
     textAlign: "center",
     background: "#1e3a8a",
     color: "white",
     width: "100%",
-    borderTopLeftRadius: "2px",
-    borderTopRightRadius: "2px",
     marginTop: "20px",
     padding: "10px",
     fontSize: "14px",
@@ -182,3 +187,10 @@ const styles = {
 };
 
 export default Dashboard;
+
+
+
+
+
+
+
