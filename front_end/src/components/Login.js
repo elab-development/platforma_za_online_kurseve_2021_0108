@@ -2,6 +2,8 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { api } from "../api/api-client";
+import Button from "../components/Button";
+import TextInput from "../components/TextInput";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -41,30 +43,34 @@ const Login = () => {
         </div>
 
         <h2 style={styles.title}>Prijava</h2>
-        <p style={styles.subtitle}>Dobrodošli nazad u <b>eLearn</b> platformu</p>
+        <p style={styles.subtitle}>
+          Dobrodošli nazad u <b>eLearn</b> platformu
+        </p>
 
         <form onSubmit={handleLogin} style={styles.form}>
-          <label style={styles.label}>Email</label>
-          <input
+          <TextInput
+            label="Email"
             type="email"
             placeholder="Unesite email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={styles.input}
+            style={styles.label}
+            inputStyle={styles.input}
           />
 
-          <label style={styles.label}>Lozinka</label>
-          <input
+          <TextInput
+            label="Lozinka"
             type="password"
             placeholder="Unesite lozinku"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={styles.input}
+            style={styles.label}
+            inputStyle={styles.input}
           />
 
-          <button
+          <Button
             type="submit"
             onMouseEnter={() => setBtnHover(true)}
             onMouseLeave={() => setBtnHover(false)}
@@ -78,7 +84,7 @@ const Login = () => {
             }}
           >
             Prijava
-          </button>
+          </Button>
         </form>
 
         <div style={styles.divider}>
@@ -88,28 +94,31 @@ const Login = () => {
         </div>
 
         <div style={styles.links}>
-          <button
+          <Button
             onClick={() => navigate("/register")}
             onMouseEnter={() => setRegHover(true)}
             onMouseLeave={() => setRegHover(false)}
+            variant="ghost"
             style={{
               ...styles.linkButton,
               color: regHover ? "#16387c" : "#1e3a8a",
             }}
           >
             Registracija
-          </button>
-          <button
+          </Button>
+
+          <Button
             onClick={() => navigate("/forgot-password")}
             onMouseEnter={() => setFpHover(true)}
             onMouseLeave={() => setFpHover(false)}
+            variant="ghost"
             style={{
               ...styles.linkButton,
               color: fpHover ? "#16387c" : "#1e3a8a",
             }}
           >
             Zaboravljena lozinka?
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -279,4 +288,5 @@ const styles = {
 };
 
 export default Login;
+
 

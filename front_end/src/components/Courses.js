@@ -7,12 +7,12 @@ import {
   FaDatabase,
   FaReact,
   FaTrash,
-  FaSearch,
-  FaTimes,
 } from "react-icons/fa";
 import Sidebar from "./Sidebar";
 import { api } from "../api/api-client";
 import { AuthContext } from "../context/AuthContext";
+import Button from "../components/Button";
+import TextInput from "../components/TextInput";
 
 const Courses = () => {
   const { user } = useContext(AuthContext);
@@ -52,18 +52,26 @@ const Courses = () => {
     ];
     let query = null;
     for (const { k, q } of map) {
-      if (t.includes(k)) { query = q; break; }
+      if (t.includes(k)) {
+        query = q;
+        break;
+      }
     }
-    if (!query && /\bc(?!\+|#)\b/.test(t)) query = "C programming tutorial playlist";
+    if (!query && /\bc(?!\+|#)\b/.test(t))
+      query = "C programming tutorial playlist";
     if (!query) query = "programming course playlist";
-    return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    return `https://www.youtube.com/results?search_query=${encodeURIComponent(
+      query
+    )}`;
   };
 
   // — Učitaj kurseve
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const { data: { data } } = await api.get("/courses", {
+        const {
+          data: { data },
+        } = await api.get("/courses", {
           headers: { Authorization: `Bearer ${user?.token}` },
         });
 
@@ -91,19 +99,31 @@ const Courses = () => {
   // LocalStorage helpers (per-user) — “Moji časovi”
   const watchedKey = `watchedCourses_${user?.id ?? "guest"}`;
   const getWatched = () => {
-    try { return JSON.parse(localStorage.getItem(watchedKey) || "[]"); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem(watchedKey) || "[]");
+    } catch {
+      return [];
+    }
   };
   const saveWatched = (list) => {
-    try { localStorage.setItem(watchedKey, JSON.stringify(list)); } catch {}
+    try {
+      localStorage.setItem(watchedKey, JSON.stringify(list));
+    } catch {}
   };
 
   // LocalStorage helpers — “Sertifikati” (frontend evidencija)
   const certKey = `certificates_${user?.id ?? "guest"}`;
   const getCerts = () => {
-    try { return JSON.parse(localStorage.getItem(certKey) || "[]"); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem(certKey) || "[]");
+    } catch {
+      return [];
+    }
   };
   const saveCerts = (list) => {
-    try { localStorage.setItem(certKey, JSON.stringify(list)); } catch {}
+    try {
+      localStorage.setItem(certKey, JSON.stringify(list));
+    } catch {}
   };
 
   // — Backend upis "sertifikata" (minimalno)
@@ -132,8 +152,7 @@ const Courses = () => {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
     } catch (e) {
-      // 409/400 ako već postoji — ignoriši
-      if (![400,409].includes(e?.response?.status)) {
+      if (![400, 409].includes(e?.response?.status)) {
         console.warn("Enroll error:", e?.response?.data || e.message);
       }
     }
@@ -143,23 +162,35 @@ const Courses = () => {
   const recordWatchedCourse = async (course) => {
     if (!user || user.role !== "student") return;
 
-    // Moji časovi
     const current = getWatched();
     if (!current.some((c) => c.id === course.id)) {
-      saveWatched([{ id: course.id, title: course.title, instructor: course.instructor }, ...current]);
+      saveWatched([
+        { id: course.id, title: course.title, instructor: course.instructor },
+        ...current,
+      ]);
     }
 
-    // Sertifikat – frontend + backend
     const certs = getCerts();
     if (!certs.some((c) => c.id === course.id)) {
-      saveCerts([{ id: course.id, courseTitle: course.title, issuedAt: new Date().toISOString() }, ...certs]);
-      try { await saveCertificateToBackend(course.id); } catch (err) {
-        console.error("Greška pri snimanju sertifikata:", err?.response?.data || err.message);
+      saveCerts([
+        {
+          id: course.id,
+          courseTitle: course.title,
+          issuedAt: new Date().toISOString(),
+        },
+        ...certs,
+      ]);
+      try {
+        await saveCertificateToBackend(course.id);
+      } catch (err) {
+        console.error(
+          "Greška pri snimanju sertifikata:",
+          err?.response?.data || err.message
+        );
       }
     }
   };
 
-  // — Klik na “Pogledaj kurs”: prvo ENROLL, pa evidencije, pa otvori YouTube
   const handleViewCourse = async (course) => {
     try {
       await enrollInCourse(course.id);
@@ -169,7 +200,6 @@ const Courses = () => {
     }
   };
 
-  // — Dozvole: brisanje (samo nastavnik vlasnik)
   const canDelete = (course) =>
     user?.role === "teacher" && user?.id && user.id === course.teacherId;
 
@@ -191,7 +221,9 @@ const Courses = () => {
       saveCerts(certs);
 
       setTimeout(() => {
-        const totalAfter = applyFilters(allCourses.filter((c) => c.id !== courseId)).length;
+        const totalAfter = applyFilters(
+          allCourses.filter((c) => c.id !== courseId)
+        ).length;
         const lastPageAfter = Math.max(1, Math.ceil(totalAfter / perPage));
         setPage((p) => Math.min(p, lastPageAfter));
       }, 0);
@@ -201,8 +233,8 @@ const Courses = () => {
       console.error("DELETE /courses error:", err);
       alert(
         err?.response?.data?.message ??
-        err?.response?.data?.error ??
-        "Greška prilikom brisanja kursa."
+          err?.response?.data?.error ??
+          "Greška prilikom brisanja kursa."
       );
     }
   };
@@ -229,10 +261,6 @@ const Courses = () => {
     setPage(1);
   }, [allCourses, searchTerm, filteredInstructor]); // eslint-disable-line
 
-  const clearSearch = () => setSearchTerm("");
-  const onSearchKeyDown = (e) => { if (e.key === "Enter") handleSearch(); };
-  const handleSearch = () => setSearchTerm(searchTerm.trim());
-
   // — Paginacija
   const { visibleCourses, totalPages, totalCount } = useMemo(() => {
     const total = courses.length;
@@ -247,6 +275,9 @@ const Courses = () => {
     };
   }, [courses, page]);
 
+  const isPrevDisabled = page <= 1;
+  const isNextDisabled = page >= totalPages;
+
   return (
     <div style={styles.container}>
       <Sidebar />
@@ -257,53 +288,55 @@ const Courses = () => {
         </h1>
 
         <div style={styles.filtersRow}>
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={styles.searchGroup}>
             <label htmlFor="courseSearch" style={{ fontWeight: 600 }}>
               Pretraga:
             </label>
-            <input
-              id="courseSearch"
+
+            <TextInput
               type="text"
               placeholder="npr. 'ja' za 'JavaScript osnove'"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={onSearchKeyDown}
-              style={styles.searchInput}
+              inputStyle={styles.searchInput}
             />
-            <button onClick={handleSearch} style={styles.searchButton}>
-              <FaSearch style={{ marginRight: 6 }} />
-              Pretraži
-            </button>
-            {searchTerm && (
-              <button onClick={clearSearch} style={styles.clearButton}>
-                <FaTimes style={{ marginRight: 6 }} />
-                Očisti
-              </button>
-            )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
             <span style={{ fontWeight: 600 }}>Instruktor:</span>
-            <button
+
+            <Button
               onClick={() => setFilteredInstructor("")}
               style={{
                 ...styles.instructorButton,
-                ...(filteredInstructor === "" ? styles.instructorButtonActive : {}),
+                ...(filteredInstructor === ""
+                  ? styles.instructorButtonActive
+                  : {}),
               }}
             >
               Svi
-            </button>
+            </Button>
+
             {uniqueInstructors.map((ins) => (
-              <button
+              <Button
                 key={ins}
                 onClick={() => setFilteredInstructor(ins)}
                 style={{
                   ...styles.instructorButton,
-                  ...(filteredInstructor === ins ? styles.instructorButtonActive : {}),
+                  ...(filteredInstructor === ins
+                    ? styles.instructorButtonActive
+                    : {}),
                 }}
               >
                 {ins}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -321,23 +354,23 @@ const Courses = () => {
               </p>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button
+                <Button
                   type="button"
                   style={styles.button}
                   onClick={() => handleViewCourse(course)}
                 >
                   Pogledaj kurs
-                </button>
+                </Button>
 
                 {canDelete(course) && (
-                  <button
+                  <Button
                     onClick={() => handleDeleteCourse(course.id)}
                     style={{ ...styles.button, backgroundColor: "#dc2626" }}
                     title="Obriši kurs"
                   >
                     <FaTrash style={{ marginRight: 6 }} />
                     Obriši kurs
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -345,23 +378,34 @@ const Courses = () => {
         </div>
 
         <div style={styles.pager}>
-          <button
-            style={styles.pageBtn}
+          <Button
+            style={{
+              ...styles.pageBtn,
+              ...(isPrevDisabled
+                ? styles.pageBtnDisabled
+                : styles.pageBtnActive),
+            }}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
+            disabled={isPrevDisabled}
           >
             ← Prethodna
-          </button>
+          </Button>
           <span>
-            Strana {Math.min(page, totalPages)} / {totalPages} • {totalCount} kurs(eva)
+            Strana {Math.min(page, totalPages)} / {totalPages} • {totalCount}{" "}
+            kurs(eva)
           </span>
-          <button
-            style={styles.pageBtn}
+          <Button
+            style={{
+              ...styles.pageBtn,
+              ...(isNextDisabled
+                ? styles.pageBtnDisabled
+                : styles.pageBtnActive),
+            }}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
+            disabled={isNextDisabled}
           >
             Sledeća →
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -389,29 +433,17 @@ const styles = {
     gap: "12px",
     marginBottom: "20px",
   },
+  searchGroup: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
   searchInput: {
-    padding: "10px 12px",
+    padding: "12px 14px",
     borderRadius: "8px",
     border: "1px solid #cbd5e1",
     minWidth: "260px",
-  },
-  searchButton: {
-    padding: "10px 14px",
-    border: "none",
-    backgroundColor: "#1e3a8a",
-    color: "white",
-    cursor: "pointer",
-    borderRadius: "8px",
-    fontWeight: 600,
-  },
-  clearButton: {
-    padding: "10px 14px",
-    border: "none",
-    backgroundColor: "#475569",
-    color: "white",
-    cursor: "pointer",
-    borderRadius: "8px",
-    fontWeight: 600,
   },
   instructorButton: {
     padding: "8px 12px",
@@ -419,6 +451,8 @@ const styles = {
     border: "1px solid #cbd5e1",
     background: "white",
     cursor: "pointer",
+    color: "#0f172a",
+    fontWeight: 600,
   },
   instructorButtonActive: {
     background: "#1e3a8a",
@@ -469,14 +503,25 @@ const styles = {
   },
   pageBtn: {
     padding: "8px 12px",
-    background: "#e2e8f0",
     border: "none",
     borderRadius: 8,
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: "pointer",
+    minWidth: 110,
+    textAlign: "center",
+  },
+  pageBtnActive: {
+    background: "#1e3a8a",
+    color: "#fff",
+  },
+  pageBtnDisabled: {
+    background: "#e5e7eb",
+    color: "#94a3b8",
+    cursor: "not-allowed",
   },
 };
 
 export default Courses;
+
 
 

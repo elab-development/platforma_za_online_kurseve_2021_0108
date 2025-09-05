@@ -14,7 +14,7 @@ use App\Http\Controllers\ExternalController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-//reset lozinke
+// reset lozinke
 Route::post('/reset-password-simple', [AuthController::class, 'resetPasswordSimple']);
 Route::get('/forgot-password', [ForgotPasswordController::class,'getView'])->middleware('guest')->name('password.request');
 Route::post('/forgot-password',[ForgotPasswordController::class,'sendResetLink']);
@@ -24,21 +24,26 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Kursevi
+    // Kursevi (postojeće eksplicitne rute — ostaju neizmenjene)
     Route::get('/courses', [CourseController::class, 'index']);
     Route::get('/courses/{course}', [CourseController::class, 'show']);
     Route::post('/courses', [CourseController::class, 'store'])->middleware('can:create,App\Models\Course');
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,course');
 
+    // ✅ DODATO: Resource ruta (ugnježdena) za prijave na kurs
+    // Kreira RESTful rutu: POST /courses/{course}/enrollments  → EnrollmentController@store
+    // Ova nova resource ruta NE menja tvoju postojeću /courses/{course}/enroll, već je dodatna.
+    Route::apiResource('courses.enrollments', EnrollmentController::class)
+        ->only(['store'])
+        ->middleware('can:enroll,course');
+
     // ✅ Sertifikati – SVI POST endpointi idu na CertificateController@upload
     Route::get('/users/{user}/certificates', [CertificateController::class, 'index']);
-
-    
     Route::post('/certificates/store', [CertificateController::class, 'upload']);       // front-end gađa ovo
     Route::post('/certificates',       [CertificateController::class, 'upload']);       // fallback
     Route::post('/certificates/issue-on-view', [CertificateController::class, 'upload']); // čitljiv alias
-   
-    // Prijave
+
+    // Prijave (postojeća ruta — ostaje neizmenjena)
     Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'store'])->middleware('can:enroll,course');
 
     // Korisnici
@@ -49,9 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{user}/courses/teaching', [UserController::class, 'teachingCourses']);
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->middleware('can:delete,user');
 
-
     // Javni servis — motivaciona poruka (Dashboard)
     Route::get('/external/quote', [ExternalController::class, 'quote']);
 });
+
 
 

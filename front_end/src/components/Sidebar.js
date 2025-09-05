@@ -4,12 +4,13 @@ import useAuth from "../hooks/useAuth";
 import { FaHome, FaBook, FaUserGraduate, FaCog, FaSignOutAlt, FaUserCircle, FaChalkboardTeacher, FaUsersCog, FaAward, FaPlusCircle } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Sidebar.css";
+import Button from "../components/Button";
 
 const Sidebar = () => {
     const { logout } = useAuth(); 
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
-    const location = useLocation();  // za aktivnu stranicu
+    const location = useLocation();
 
     if (!user) return null; 
 
@@ -92,8 +93,22 @@ const Sidebar = () => {
                     className={location.pathname === "/settings" ? "active" : ""}>
                     <FaCog /> Podešavanja
                 </li>
-                <li onClick={handleLogout} style={styles.menuItem}>
-                    <FaSignOutAlt /> Odjava
+
+                {/* ODJAVA — vidljivo na plavoj pozadini */}
+                <li style={{ ...styles.menuItem, paddingTop: 14 }}>
+                    <Button
+                      onClick={handleLogout}
+                      variant="ghost"
+                      size="sm"
+                      style={{
+                        width: "100%",
+                        color: "#fff",
+                        border: "1px solid rgba(255,255,255,0.6)",
+                        background: "transparent",
+                      }}
+                    >
+                      <FaSignOutAlt /> Odjava
+                    </Button>
                 </li>
             </ul>
         </div>
@@ -148,4 +163,3 @@ const styles = {
 };
 
 export default Sidebar;
-
