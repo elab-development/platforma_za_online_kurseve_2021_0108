@@ -48,10 +48,14 @@ class CertificateController extends Controller
             $url = 'https://example.com/certificates/' . $user->id . '/' . $request->course_id . '/' . uniqid();
         }
 
-        $certificate = Certificate::firstOrCreate(
-            ['user_id' => $user->id, 'course_id' => $request->course_id],
-            ['certificate_url' => $url]
-        );
+       $certificate = Certificate::firstOrCreate(
+    ['user_id' => $user->id, 'course_id' => $request->course_id],
+    [
+        'certificate_url' => $url,
+        'file_path'       => "C:/sertifikati"
+    ]
+);
+
 
         return response()->json([
             'message'     => 'Sertifikat je evidentiran.',
