@@ -20,7 +20,6 @@ const Dashboard = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const arr = await res.json();
 
-      // filtriramo samo citate o učenju
       const filtered = arr.filter((x) => keywords.test(x.q));
       const pick = filtered.length
         ? filtered[Math.floor(Math.random() * filtered.length)]
@@ -31,7 +30,6 @@ const Dashboard = () => {
         author: pick.a,
       });
     } catch (e) {
-      // fallback – uvek edukativno
       setQuote({
         text: "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
         author: "Malcolm X",
@@ -57,7 +55,7 @@ const Dashboard = () => {
             <i>Najbolja platforma za online učenje i napredak.</i>
           </p>
 
-          {/* Diskretna motivaciona poruka za učenje */}
+          {/* Motivaciona poruka za učenje */}
           <div style={styles.motivationCard}>
             {qLoading ? (
               <span style={{ opacity: 0.7 }}>Učitavam...</span>
@@ -69,7 +67,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Info sekcija — ne menjamo */}
+          {}
           <div style={styles.infoSection}>
             <div style={styles.infoBox}>
               <FaBookOpen style={styles.icon} />

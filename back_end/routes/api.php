@@ -24,26 +24,24 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Kursevi (postojeće eksplicitne rute — ostaju neizmenjene)
+    // Kursevi 
     Route::get('/courses', [CourseController::class, 'index']);
     Route::get('/courses/{course}', [CourseController::class, 'show']);
     Route::post('/courses', [CourseController::class, 'store'])->middleware('can:create,App\Models\Course');
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,course');
 
-    // ✅ DODATO: Resource ruta (ugnježdena) za prijave na kurs
-    // Kreira RESTful rutu: POST /courses/{course}/enrollments  → EnrollmentController@store
-    // Ova nova resource ruta NE menja tvoju postojeću /courses/{course}/enroll, već je dodatna.
+    //  Resource ruta za prijave na kurs
     Route::apiResource('courses.enrollments', EnrollmentController::class)
         ->only(['store'])
         ->middleware('can:enroll,course');
 
-    // ✅ Sertifikati – SVI POST endpointi idu na CertificateController@upload
+    //  Sertifikati
     Route::get('/users/{user}/certificates', [CertificateController::class, 'index']);
     Route::post('/certificates/store', [CertificateController::class, 'upload']);       // front-end gađa ovo
     Route::post('/certificates',       [CertificateController::class, 'upload']);       // fallback
     Route::post('/certificates/issue-on-view', [CertificateController::class, 'upload']); // čitljiv alias
 
-    // Prijave (postojeća ruta — ostaje neizmenjena)
+    // Prijave na kurs
     Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'store'])->middleware('can:enroll,course');
 
     // Korisnici

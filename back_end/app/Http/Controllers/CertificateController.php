@@ -9,10 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CertificateController extends Controller
 {
-    /**
-     * GET /api/users/{user}/certificates
-     * Vraća sve sertifikate datog korisnika (JSON).
-     */
+   // vraca sve sertifikate korisnika
     public function index(User $user)
     {
         $certs = Certificate::where('user_id', $user->id)
@@ -22,14 +19,7 @@ class CertificateController extends Controller
         return response()->json(['data' => $certs]);
     }
 
-    /**
-     * POST /api/certificates*  (sve tri rute iz routes api.php gađaju ovu metodu)
-     * Minimalni upis “sertifikata” bez file upload-a.
-     *
-     * Očekuje:
-     *  - course_id (required, exists:courses,id)
-     *  - certificate (optional string; default: "Sertifikat")
-     */
+    
     public function upload(Request $request)
     {
         $request->validate([
@@ -41,7 +31,6 @@ class CertificateController extends Controller
         $courseId        = (int) $request->input('course_id');
         $certificateText = $request->input('certificate', 'Sertifikat');
 
-        // Ne dupliraj isti sertifikat za (user, course) — vrati postojeći ili kreiraj novi
         $cert = Certificate::firstOrCreate(
             ['user_id' => $userId, 'course_id' => $courseId],
             ['certificate' => $certificateText]

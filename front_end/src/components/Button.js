@@ -2,8 +2,8 @@ import React from "react";
 
 export default function Button({
   children,
-  variant = "primary",     // "primary" | "outline" | "ghost"
-  size = "md",              // "sm" | "md" | "lg"
+  variant = "primary",     
+  size = "md",              
   style = {},
   disabled,
   ...props

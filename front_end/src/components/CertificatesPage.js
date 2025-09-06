@@ -21,11 +21,9 @@ const CertificatesPage = () => {
 
   useEffect(() => {
     load();
-    // kada se vrati na tab, osveži
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

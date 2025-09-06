@@ -23,14 +23,13 @@ const Settings = () => {
         const u = res.data;
         setForm({ name: u.name ?? "", email: u.email ?? "" });
       } catch (e) {
-        // Bez prikaza greške korisniku
+      
         console.error("Greška pri učitavanju profila:", e?.response?.data || e.message);
       } finally {
         setLoading(false);
       }
     };
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -48,13 +47,11 @@ const Settings = () => {
         { headers: { Authorization: `Bearer ${user?.token}` } }
       );
       const updated = res.data?.user ?? {};
-      // Sačuvaj u kontekstu (zadrži token!)
+      
       setUser({ ...(user || {}), ...updated, token: user?.token });
       setMsg(res.data?.message || "Profil je uspešno sačuvan.");
     } catch (e) {
-      // Bez prikaza greške korisniku
       console.error("Greška pri čuvanju profila:", e?.response?.data || e.message);
-      // Po želji: može ostati tiho bez poruke
     } finally {
       setSaving(false);
     }

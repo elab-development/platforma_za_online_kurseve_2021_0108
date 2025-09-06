@@ -33,7 +33,7 @@ const Register = () => {
       navigate("/dashboard");
     } catch (err) {
       const d = err.response?.data;
-      // Prikaži tačne poruke iz backenda (bez generičkog "validation failed")
+      
       if (d?.errors) {
         const msgs = [];
         for (const k in d.errors) msgs.push(`${k}: ${d.errors[k].join(", ")}`);
@@ -134,7 +134,7 @@ const Register = () => {
   );
 };
 
-// ——— Stilovi (bez eksternih biblioteka) ———
+// ——— Stilovi ———
 const styles = {
   wrap: {
     minHeight: "100vh",
@@ -247,7 +247,7 @@ const styles = {
   },
 };
 
-// Fokus stilovi (opciono možeš prebaciti u CSS ako želiš)
+// Fokus stilovi 
 (() => {
   const style = document.createElement("style");
   style.innerHTML = `

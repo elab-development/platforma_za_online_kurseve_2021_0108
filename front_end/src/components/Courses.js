@@ -93,10 +93,8 @@ const Courses = () => {
     };
 
     fetchCourses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // LocalStorage helpers (per-user) — “Moji časovi”
   const watchedKey = `watchedCourses_${user?.id ?? "guest"}`;
   const getWatched = () => {
     try {
@@ -111,7 +109,6 @@ const Courses = () => {
     } catch {}
   };
 
-  // LocalStorage helpers — “Sertifikati” (frontend evidencija)
   const certKey = `certificates_${user?.id ?? "guest"}`;
   const getCerts = () => {
     try {
@@ -126,7 +123,7 @@ const Courses = () => {
     } catch {}
   };
 
-  // — Backend upis "sertifikata" (minimalno)
+  // — Backend upis sertifikata
   const saveCertificateToBackend = async (courseId) => {
     const payload = { certificate: "Sertifikat", course_id: courseId };
     try {
@@ -158,7 +155,6 @@ const Courses = () => {
     }
   };
 
-  // — Snimi “gledano” i “sertifikat”
   const recordWatchedCourse = async (course) => {
     if (!user || user.role !== "student") return;
 

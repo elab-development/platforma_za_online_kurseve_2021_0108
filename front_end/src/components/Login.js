@@ -33,7 +33,7 @@ const Login = () => {
 
   return (
     <div style={styles.container}>
-      {/* dekorativne "meke" mrlje u pozadini */}
+      {}
       <div style={styles.blobA} />
       <div style={styles.blobB} />
 
@@ -139,7 +139,7 @@ const styles = {
     fontFamily: "Arial, sans-serif",
   },
 
-  // dekorativne pozadinske mrlje
+  
   blobA: {
     position: "absolute",
     width: 400,

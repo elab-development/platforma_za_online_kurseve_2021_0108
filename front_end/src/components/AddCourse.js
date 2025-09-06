@@ -41,7 +41,7 @@ const AddCourse = () => {
     });
 
     console.log("Novi kurs:", courseData);
-    // Dodaj logiku za slanje podataka na server
+    // Logika za slanje podataka na server
 
     setCourseData({
       title: "",

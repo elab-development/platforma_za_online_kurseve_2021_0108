@@ -10,10 +10,10 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')
                   ->constrained('users')
-                  ->cascadeOnDelete();          // NOT NULL + FK
+                  ->cascadeOnDelete();          
             $table->foreignId('course_id')
                   ->constrained('courses')
-                  ->cascadeOnDelete();          // NOT NULL + FK
+                  ->cascadeOnDelete();          
             $table->timestamps();
 
             // Spreči duplu prijavu istog korisnika na isti kurs
