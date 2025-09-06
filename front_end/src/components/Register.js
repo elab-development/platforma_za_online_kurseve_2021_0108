@@ -25,7 +25,6 @@ const Register = () => {
     try {
       const res = await api.post("/register", form);
 
-      // uspeh: postavi user + token i idi na dashboard
       setUser({
         ...(res.data?.data?.user ?? res.data?.user),
         token: res.data?.data?.token ?? res.data?.token,
@@ -33,7 +32,6 @@ const Register = () => {
       navigate("/dashboard");
     } catch (err) {
       const d = err.response?.data;
-      
       if (d?.errors) {
         const msgs = [];
         for (const k in d.errors) msgs.push(`${k}: ${d.errors[k].join(", ")}`);
@@ -226,8 +224,7 @@ const styles = {
   submit: {
     marginTop: 8,
     padding: "12px 16px",
-    background:
-      "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+    background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
     color: "#fff",
     border: "none",
     borderRadius: 12,
@@ -262,8 +259,3 @@ const styles = {
 })();
 
 export default Register;
-
-
-
-
-

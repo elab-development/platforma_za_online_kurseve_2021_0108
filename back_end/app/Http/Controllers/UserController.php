@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-  
     public function index()
     {
         $users = User::query()
@@ -20,19 +19,17 @@ class UserController extends Controller
         return response()->json(['data' => $users]);
     }
 
-    
     public function show(User $user)
     {
         return response()->json($user);
     }
 
- 
     public function update(Request $request, User $user)
     {
+        // Admin panel: dozvoljene izmene su SAMO name i email
         $validated = $request->validate([
             'name'  => ['sometimes','string','max:50'],
             'email' => ['sometimes','email','max:255','unique:users,email,'.$user->id],
-            'role'  => ['sometimes','in:student,teacher,admin'],
         ]);
 
         $user->update($validated);
@@ -43,9 +40,9 @@ class UserController extends Controller
         ]);
     }
 
-  
     public function destroy(User $user)
     {
+        // Brisanje korisnika (admin). Ne diramo ostale tokove.
         $user->tokens()?->delete();
         $user->delete();
 

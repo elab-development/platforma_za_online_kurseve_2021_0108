@@ -10,7 +10,12 @@ const AllUsers = () => {
   const [filter, setFilter] = useState("all"); // all | student | teacher
   const [search, setSearch] = useState("");
 
-  // Učitaj sve nastavnike i studente
+  // Edit modal state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "" });
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -20,22 +25,17 @@ const AllUsers = () => {
         setUsers(res.data?.data ?? []);
       } catch (e) {
         console.error("Greška pri učitavanju korisnika:", e?.response?.data || e.message);
-        alert(
-          e?.response?.data?.message ||
-          "Greška pri učitavanju korisnika."
-        );
+        alert(e?.response?.data?.message || "Greška pri učitavanju korisnika.");
       } finally {
         setLoading(false);
       }
     };
     load();
-    
-  }, []);
+  }, []); // eslint-disable-line
 
   const handleDelete = async (id) => {
     const sure = window.confirm("Da li ste sigurni da želite da obrišete ovog korisnika?");
     if (!sure) return;
-
     try {
       await api.delete(`/users/${id}`, {
         headers: { Authorization: `Bearer ${user?.token}` },
@@ -43,10 +43,39 @@ const AllUsers = () => {
       setUsers((prev) => prev.filter((u) => u.id !== id));
     } catch (e) {
       console.error("Greška pri brisanju korisnika:", e?.response?.data || e.message);
-      alert(
-        e?.response?.data?.message ||
-        "Greška pri brisanju korisnika."
-      );
+      alert(e?.response?.data?.message || "Greška pri brisanju korisnika.");
+    }
+  };
+
+  const openEdit = (u) => {
+    setEditUser(u);
+    setEditForm({ name: u.name || "", email: u.email || "" });
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editUser) return;
+    setSaving(true);
+    try {
+      const res = await api.put(`/users/${editUser.id}`, editForm, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      const updated = res.data?.user ?? { ...editUser, ...editForm };
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)));
+      setEditOpen(false);
+      setEditUser(null);
+    } catch (e) {
+      console.error("Greška pri izmeni korisnika:", e?.response?.data || e.message);
+      const d = e?.response?.data;
+      if (d?.errors) {
+        const msgs = [];
+        for (const k in d.errors) msgs.push(`${k}: ${d.errors[k].join(", ")}`);
+        alert(msgs.join("\n"));
+      } else {
+        alert(d?.message || "Greška pri izmeni korisnika.");
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -57,10 +86,7 @@ const AllUsers = () => {
     .filter((u) => {
       const q = normalized(search);
       if (!q) return true;
-      return (
-        normalized(u.name).includes(q) ||
-        normalized(u.email).includes(q)
-      );
+      return normalized(u.name).includes(q) || normalized(u.email).includes(q);
     });
 
   return (
@@ -111,16 +137,25 @@ const AllUsers = () => {
                     <td style={styles.td}>{u.name}</td>
                     <td style={styles.td}>{u.email}</td>
                     <td style={styles.td}>
-                      <span style={{
-                        ...styles.roleBadge,
-                        background: u.role === "teacher" ? "#eef2ff" : "#ecfeff",
-                        borderColor: u.role === "teacher" ? "#c7d2fe" : "#a5f3fc",
-                        color: u.role === "teacher" ? "#1e3a8a" : "#155e75",
-                      }}>
+                      <span
+                        style={{
+                          ...styles.roleBadge,
+                          background: u.role === "teacher" ? "#eef2ff" : "#ecfeff",
+                          borderColor: u.role === "teacher" ? "#c7d2fe" : "#a5f3fc",
+                          color: u.role === "teacher" ? "#1e3a8a" : "#155e75",
+                        }}
+                      >
                         {u.role}
                       </span>
                     </td>
                     <td style={styles.tdRight}>
+                      <button
+                        style={{ ...styles.editBtn, marginRight: 8 }}
+                        onClick={() => openEdit(u)}
+                        title="Izmeni korisnika"
+                      >
+                        Izmeni
+                      </button>
                       <button
                         style={styles.deleteBtn}
                         onClick={() => handleDelete(u.id)}
@@ -133,6 +168,49 @@ const AllUsers = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Edit modal */}
+        {editOpen && (
+          <div style={styles.modalBackdrop} onClick={() => !saving && setEditOpen(false)}>
+            <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+              <h2 style={{ marginTop: 0 }}>Izmeni korisnika</h2>
+
+              <div style={styles.formGroup}>
+                <label htmlFor="edit-name" style={styles.label}>Ime i prezime</label>
+                <input
+                  id="edit-name"
+                  style={styles.modalInput}
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label htmlFor="edit-email" style={styles.label}>Email</label>
+                <input
+                  id="edit-email"
+                  type="email"
+                  style={styles.modalInput}
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                <button
+                  style={styles.ghostBtn}
+                  onClick={() => setEditOpen(false)}
+                  disabled={saving}
+                >
+                  Otkaži
+                </button>
+                <button style={styles.primaryBtn} onClick={saveEdit} disabled={saving}>
+                  {saving ? "Čuvam..." : "Sačuvaj"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -206,6 +284,7 @@ const styles = {
   tdRight: {
     padding: "12px",
     textAlign: "right",
+    whiteSpace: "nowrap",
   },
   roleBadge: {
     display: "inline-block",
@@ -216,6 +295,15 @@ const styles = {
     fontWeight: 700,
     textTransform: "capitalize",
   },
+  editBtn: {
+    padding: "8px 12px",
+    background: "#1e3a8a",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
   deleteBtn: {
     padding: "8px 12px",
     background: "#dc2626",
@@ -225,7 +313,65 @@ const styles = {
     cursor: "pointer",
     fontWeight: 700,
   },
+  // modal
+  modalBackdrop: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.35)",
+    display: "grid",
+    placeItems: "center",
+    padding: 16,
+    zIndex: 50,
+  },
+  modal: {
+    width: "100%",
+    maxWidth: 520,
+    background: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+  },
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    marginTop: 8,
+  },
+  label: {
+    fontSize: 13,
+    color: "#334155",
+    fontWeight: 600,
+  },
+  modalInput: {
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    background: "#f8fafc",
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  ghostBtn: {
+    padding: "8px 12px",
+    background: "transparent",
+    color: "#0f172a",
+    border: "1px solid #cbd5e1",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
+  primaryBtn: {
+    padding: "8px 12px",
+    background: "#1e3a8a",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontWeight: 700,
+  },
 };
 
 export default AllUsers;
+
+
 

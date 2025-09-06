@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Prijave na kurs
     Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'store'])->middleware('can:enroll,course');
 
-    // Korisnici
+    // Korisnici (admin panel)
     Route::get('/users', [UserController::class, 'index'])->middleware('can:viewAny,App\Models\User');
     Route::get('/users/{user}', [UserController::class, 'show']);
     Route::put('/users/{user}', [UserController::class, 'update'])->middleware('can:update,user');
@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Javni servis — motivaciona poruka (Dashboard)
     Route::get('/external/quote', [ExternalController::class, 'quote']);
 });
+
 
 
 

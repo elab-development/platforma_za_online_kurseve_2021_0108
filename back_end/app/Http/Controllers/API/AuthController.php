@@ -10,7 +10,6 @@ use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
-    
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -36,7 +35,6 @@ class AuthController extends Controller
         ], 201);
     }
 
-    
     public function login(Request $request)
     {
         $request->validate([
@@ -71,14 +69,11 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     */
     public function logout(Request $request)
     {
         $request->user()?->currentAccessToken()?->delete();
         return response()->json(['message' => 'Logged out.']);
     }
-
 
     public function resetPasswordSimple(Request $request)
     {
@@ -100,3 +95,4 @@ class AuthController extends Controller
         ]);
     }
 }
+

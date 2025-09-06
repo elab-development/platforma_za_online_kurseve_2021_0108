@@ -36,13 +36,18 @@ const Sidebar = () => {
                 >
                     <FaHome /> Početna
                 </li>
-                <li 
-                    onClick={() => navigate("/courses")} 
-                    className={location.pathname === "/courses" ? "active" : ""}
-                    style={styles.menuItem}
-                >
-                    <FaBook /> Kursevi
-                </li>
+
+                {/* Kursevi: sakriveno za admina */}
+                {user.role !== "admin" && (
+                  <li 
+                      onClick={() => navigate("/courses")} 
+                      className={location.pathname === "/courses" ? "active" : ""}
+                      style={styles.menuItem}
+                  >
+                      <FaBook /> Kursevi
+                  </li>
+                )}
+
                 {user.role === "admin" && (
                     <li
                         onClick={() => navigate("/all-users")}
@@ -52,6 +57,7 @@ const Sidebar = () => {
                         <FaUsersCog /> Upravljanje korisnicima
                     </li>
                 )}
+
                 {user.role === "teacher" && (
                     <li 
                         onClick={() => navigate("/courses-list")} 
@@ -88,13 +94,17 @@ const Sidebar = () => {
                         <FaPlusCircle /> Dodaj kurs
                     </li>
                 )}
-                <li style={styles.menuItem} 
-                    onClick={() => navigate("/settings")}
-                    className={location.pathname === "/settings" ? "active" : ""}>
-                    <FaCog /> Podešavanja
-                </li>
 
-                {/* ODJAVA — vidljivo na plavoj pozadini */}
+                {/* Podešavanja: sakriveno za admina, ostaje za ostale */}
+                {user.role !== "admin" && (
+                  <li style={styles.menuItem} 
+                      onClick={() => navigate("/settings")}
+                      className={location.pathname === "/settings" ? "active" : ""}>
+                      <FaCog /> Podešavanja
+                  </li>
+                )}
+
+                {/* ODJAVA */}
                 <li style={{ ...styles.menuItem, paddingTop: 14 }}>
                     <Button
                       onClick={handleLogout}
@@ -163,3 +173,4 @@ const styles = {
 };
 
 export default Sidebar;
+

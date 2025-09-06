@@ -41,7 +41,7 @@ const AddCourse = () => {
     });
 
     console.log("Novi kurs:", courseData);
-    // Logika za slanje podataka na server
+    //  za slanje podataka na server
 
     setCourseData({
       title: "",
@@ -85,27 +85,7 @@ const AddCourse = () => {
             placeholder="Unesite opis kursa"
           />
         </div>
-        {/* <div style={styles.formGroup}>
-          <label style={styles.label}>Materijali kursa:</label>
-          <div style={styles.fileInputWrapper}>
-            <input type="file" onChange={handleFileChange} multiple style={styles.inputFile} />
-            <FaFileUpload style={styles.uploadIcon} />
-          </div>
-          <div style={styles.materialList}>
-            {courseData.materials.map((file, index) => (
-              <div key={index} style={styles.materialItem}>
-                <span>{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFile(file.name)}
-                  style={styles.removeButton}
-                >
-                  X
-                </button>
-              </div>
-            ))}
-          </div>
-        </div> */}
+        {}
         <div style={styles.buttonContainer}>
           <button type="submit" style={styles.submitButton}>
             <FaPlusCircle style={styles.icon} /> Dodaj kurs
