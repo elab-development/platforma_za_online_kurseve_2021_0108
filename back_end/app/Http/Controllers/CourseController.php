@@ -5,19 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache; // ⬅️ dodato
 
 class CourseController extends Controller
 {
-  
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) $request->query('per_page', 8);
+        $page    = (int) $request->query('page', 1);
 
-        
-        $courses = Course::query()
-            ->with(['teacher', 'enrollments'])
-            ->orderByDesc('created_at')
-            ->paginate($perPage);
+        // ⬅️ Keširamo konkretan "page + perPage" rezultat na 60 sekundi
+        $cacheKey = "courses_page_{$page}_per_{$perPage}";
+
+        $courses = Cache::remember($cacheKey, 60, function () use ($perPage, $page) {
+            return Course::query()
+                ->with(['teacher', 'enrollments'])
+                ->orderByDesc('created_at')
+                ->paginate($perPage, ['*'], 'page', $page);
+        });
 
         $mapped = $courses->getCollection()->map(function ($c) {
             return [
@@ -38,7 +43,6 @@ class CourseController extends Controller
         return response()->json($courses)->setStatusCode(200);
     }
 
-  
     public function store(Request $request): JsonResponse
     {
         $validatedData = $request->validate([
@@ -49,6 +53,8 @@ class CourseController extends Controller
 
         $course = new Course($validatedData);
         $course->save();
+
+        Cache::flush(); // ⬅️ prosta invalidacija keša posle izmene
 
         return response()->json([
             'message' => 'Course created successfully',
@@ -74,6 +80,7 @@ class CourseController extends Controller
 
         return response()->json(['data' => $payload], 200);
     }
+
     public function update(Request $request, Course $course): JsonResponse
     {
         $validatedData = $request->validate([
@@ -82,6 +89,8 @@ class CourseController extends Controller
         ]);
 
         $course->update($validatedData);
+
+        Cache::flush(); // ⬅️ invalidacija keša
 
         return response()->json([
             'message' => 'Course updated successfully',
@@ -92,6 +101,9 @@ class CourseController extends Controller
     public function destroy(Course $course): JsonResponse
     {
         $course->delete();
+
+        Cache::flush(); // ⬅️ invalidacija keša
+
         return response()->json(['message' => 'Course deleted']);
     }
 }

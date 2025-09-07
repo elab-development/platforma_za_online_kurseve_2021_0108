@@ -7,10 +7,10 @@ const AllUsers = () => {
   const { user } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all"); // all | student | teacher
+  const [filter, setFilter] = useState("all"); 
   const [search, setSearch] = useState("");
 
-  // Edit modal state
+  
   const [editOpen, setEditOpen] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", email: "" });
@@ -31,7 +31,7 @@ const AllUsers = () => {
       }
     };
     load();
-  }, []); // eslint-disable-line
+  }, []); 
 
   const handleDelete = async (id) => {
     const sure = window.confirm("Da li ste sigurni da želite da obrišete ovog korisnika?");
