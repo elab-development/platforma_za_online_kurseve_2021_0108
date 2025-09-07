@@ -21,6 +21,8 @@ Route::post('/forgot-password',[ForgotPasswordController::class,'sendResetLink']
 Route::get('/reset-password/{token}', [ResetPasswordController::class,'getView'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
+Route::get('/external/quote', [ExternalController::class, 'quote']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
@@ -52,8 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{user}/courses/teaching', [UserController::class, 'teachingCourses']);
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->middleware('can:delete,user');
 
-    // Javni servis — motivaciona poruka (Dashboard)
-    Route::get('/external/quote', [ExternalController::class, 'quote']);
+   
 });
 
 

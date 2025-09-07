@@ -2,8 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import { AuthContext } from "../context/AuthContext";
 import { FaBookOpen, FaLaptop, FaUserGraduate, FaChartLine } from "react-icons/fa";
-
-const ZENQUOTES_ENDPOINT = "https://zenquotes.io/api/quotes";
+import { api } from "../api/api-client";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -11,27 +10,24 @@ const Dashboard = () => {
   const [quote, setQuote] = useState(null);
   const [qLoading, setQLoading] = useState(true);
 
-  const keywords = /learn|study|education|knowledge|reading|practice|school|teacher/i;
-
   const fetchLearningQuote = async () => {
     setQLoading(true);
     try {
-      const res = await fetch(`${ZENQUOTES_ENDPOINT}?t=${Date.now()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const arr = await res.json();
-
-      const filtered = arr.filter((x) => keywords.test(x.q));
-      const pick = filtered.length
-        ? filtered[Math.floor(Math.random() * filtered.length)]
-        : arr[Math.floor(Math.random() * arr.length)];
-
+      // Ruta je JAVNA -> ne treba (i ne šaljemo) Authorization header
+      const res = await api.get("/external/quote");
+      const { text, author } = res.data || {};
       setQuote({
-        text: pick.q,
-        author: pick.a,
+        text:
+          text ||
+          "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
+        author: author || "Malcolm X",
       });
     } catch (e) {
+      // Ako spoljašnji servis i backend fallback obe zakažu (ne bi trebalo),
+      // zadržavamo dosadašnji sigurni prikaz.
       setQuote({
-        text: "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
+        text:
+          "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
         author: "Malcolm X",
       });
     } finally {
@@ -41,6 +37,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchLearningQuote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -67,7 +64,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          {}
+          {/* Informativne kartice */}
           <div style={styles.infoSection}>
             <div style={styles.infoBox}>
               <FaBookOpen style={styles.icon} />
@@ -185,10 +182,4 @@ const styles = {
 };
 
 export default Dashboard;
-
-
-
-
-
-
 

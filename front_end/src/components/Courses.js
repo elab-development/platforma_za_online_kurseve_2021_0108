@@ -142,7 +142,7 @@ const Courses = () => {
     }
   };
 
-  // — ENROLL: POST /courses/{course}/enroll
+
   const enrollInCourse = async (courseId) => {
     try {
       await api.post(`/courses/${courseId}/enroll`, null, {
