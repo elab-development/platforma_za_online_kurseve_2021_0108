@@ -13,7 +13,7 @@ const Dashboard = () => {
   const fetchLearningQuote = async () => {
     setQLoading(true);
     try {
-      // Ruta je JAVNA -> ne treba (i ne šaljemo) Authorization header
+      
       const res = await api.get("/external/quote");
       const { text, author } = res.data || {};
       setQuote({
@@ -23,8 +23,7 @@ const Dashboard = () => {
         author: author || "Malcolm X",
       });
     } catch (e) {
-      // Ako spoljašnji servis i backend fallback obe zakažu (ne bi trebalo),
-      // zadržavamo dosadašnji sigurni prikaz.
+     
       setQuote({
         text:
           "Education is the passport to the future, for tomorrow belongs to those who prepare for it today.",
@@ -37,7 +36,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchLearningQuote();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   return (

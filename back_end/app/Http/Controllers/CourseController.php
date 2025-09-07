@@ -14,7 +14,7 @@ class CourseController extends Controller
         $perPage = (int) $request->query('per_page', 8);
         $page    = (int) $request->query('page', 1);
 
-        // ⬅️ Keširamo konkretan "page + perPage" rezultat na 60 sekundi
+        
         $cacheKey = "courses_page_{$page}_per_{$perPage}";
 
         $courses = Cache::remember($cacheKey, 60, function () use ($perPage, $page) {
