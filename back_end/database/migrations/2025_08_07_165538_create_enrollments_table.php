@@ -16,7 +16,6 @@ return new class extends Migration {
                   ->cascadeOnDelete();          
             $table->timestamps();
 
-            // Spreči duplu prijavu istog korisnika na isti kurs
             $table->unique(['user_id', 'course_id']);
         });
     }
