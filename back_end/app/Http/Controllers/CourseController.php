@@ -54,7 +54,7 @@ class CourseController extends Controller
         $course = new Course($validatedData);
         $course->save();
 
-        Cache::flush(); // ⬅️ prosta invalidacija keša posle izmene
+        Cache::flush(); 
 
         return response()->json([
             'message' => 'Course created successfully',
@@ -90,7 +90,7 @@ class CourseController extends Controller
 
         $course->update($validatedData);
 
-        Cache::flush(); // ⬅️ invalidacija keša
+        Cache::flush();
 
         return response()->json([
             'message' => 'Course updated successfully',
@@ -102,7 +102,7 @@ class CourseController extends Controller
     {
         $course->delete();
 
-        Cache::flush(); // ⬅️ invalidacija keša
+        Cache::flush(); 
 
         return response()->json(['message' => 'Course deleted']);
     }

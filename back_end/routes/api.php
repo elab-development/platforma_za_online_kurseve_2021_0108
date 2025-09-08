@@ -16,10 +16,10 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // reset lozinke
 Route::post('/reset-password-simple', [AuthController::class, 'resetPasswordSimple']);
-Route::get('/forgot-password', [ForgotPasswordController::class,'getView'])->middleware('guest')->name('password.request');
-Route::post('/forgot-password',[ForgotPasswordController::class,'sendResetLink']);
-Route::get('/reset-password/{token}', [ResetPasswordController::class,'getView'])->middleware('guest')->name('password.reset');
-Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
+//Route::get('/forgot-password', [ForgotPasswordController::class,'getView'])->middleware('guest')->name('password.request');
+//Route::post('/forgot-password',[ForgotPasswordController::class,'sendResetLink']);
+//Route::get('/reset-password/{token}', [ResetPasswordController::class,'getView'])->middleware('guest')->name('password.reset');
+//Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 Route::get('/external/quote', [ExternalController::class, 'quote']);
 
@@ -38,9 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('can:enroll,course');
 
     //  Sertifikati
-    Route::get('/users/{user}/certificates', [CertificateController::class, 'index']);
-    Route::post('/certificates/store', [CertificateController::class, 'upload']);       // front-end gađa ovo
-    Route::post('/certificates',       [CertificateController::class, 'upload']);       // fallback
+   Route::get('/users/{user}/certificates', [CertificateController::class, 'index']);
+   // Route::post('/certificates/store', [CertificateController::class, 'upload']);       // front-end gađa ovo
+   // Route::post('/certificates',       [CertificateController::class, 'upload']);       // fallback
     Route::post('/certificates/issue-on-view', [CertificateController::class, 'upload']); // čitljiv alias
 
     // Prijave na kurs
