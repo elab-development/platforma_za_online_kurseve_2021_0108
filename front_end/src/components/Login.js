@@ -214,6 +214,7 @@ const styles = {
     gap: 10,
   },
   label: {
+    width: "100%",
     fontSize: 13,
     fontWeight: 700,
     color: "#334155",

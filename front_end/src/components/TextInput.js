@@ -18,7 +18,7 @@ export default function TextInput({
       <input
         type={type}
         style={{
-          width: "100%",
+          width: "94%",
           padding: "10px 12px",
           borderRadius: 8,
           border: "1px solid #cbd5e1",
