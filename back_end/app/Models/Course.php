@@ -25,7 +25,7 @@ class Course extends Model
 
     public function create(User $user)
     {
-        return $user->role === 'teacher';
+        return $user->role === 'teacher';  // Samo korisnik koji je teacher moze da kreira i azurira kurseve
     }
 
     public function updateCourse(User $user, Course $course)

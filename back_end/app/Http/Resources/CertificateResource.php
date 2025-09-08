@@ -13,7 +13,7 @@ class CertificateResource extends JsonResource
             'id'              => $this->id,
             'student'         => new UserResource($this->whenLoaded('user')),
             'course'          => new CourseResource($this->whenLoaded('course')),
-            'certificate_url' => $this->certificate_url,
+            'certificate_url' => $this->certificate_url,                        // preimenovano u certificate
             'issued_at'       => optional($this->created_at)->format('Y-m-d'),
         ];
     }

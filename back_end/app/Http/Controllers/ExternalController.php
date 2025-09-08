@@ -27,10 +27,9 @@ class ExternalController extends Controller
                 }
             }
         } catch (\Throwable $e) {
-            // Ignorišemo grešku i vraćamo fallback ispod
+            
         }
-
-        // Fallback — takođe 200 da frontend ne upada u catch
+        
         return response()->json([
             'text'   => 'Uči danas, uspeh dolazi sutra.',
             'author' => 'eLearn',

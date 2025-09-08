@@ -32,7 +32,7 @@ class CoursePolicy
     //Da li korisnik moze da azurira model
     public function updateCourse(User $user, Course $course)
 {
-    return $user->id === $course->teacher_id; // ✅ Primer provere da li je nastavnik vlasnik kursa
+    return $user->id === $course->teacher_id; 
 }
 
     //Da li korisnik moze da brise model

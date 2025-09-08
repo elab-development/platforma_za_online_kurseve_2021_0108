@@ -24,7 +24,7 @@ class CourseController extends Controller
                 ->paginate($perPage, ['*'], 'page', $page);
         });
 
-        $mapped = $courses->getCollection()->map(function ($c) {
+        $mapped = $courses->getCollection()->map(function ($c) {  //mapped sluzi da mi dobijemo podatke u formatu u kom zelimo na frontendu
             return [
                 'id'          => $c->id,
                 'title'       => $c->title,
@@ -43,7 +43,7 @@ class CourseController extends Controller
         return response()->json($courses)->setStatusCode(200);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request): JsonResponse  //upisuje se novi kurs u bazu
     {
         $validatedData = $request->validate([
             'title'       => 'required|string|max:255',

@@ -26,7 +26,7 @@ class UserFactory extends Factory
         return [
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
-            'password' => bcrypt('password'), // Svi korisnici imaju istu lozinku
+            'password' => bcrypt('password'), // Svi korisnici imaju istu lozinku, bcrypt je za hesiranje lozinke
             'role' => $this->faker->randomElement(['student', 'teacher', 'admin']),
         ];
     }
