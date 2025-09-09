@@ -29,7 +29,7 @@ const AddCourse = () => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault();           // sprecava reload strane 
 
     api.post('/courses', {
       ...courseData,

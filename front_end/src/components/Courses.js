@@ -15,17 +15,17 @@ import Button from "../components/Button";
 import TextInput from "../components/TextInput";
 
 const Courses = () => {
-  const { user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);     // trenutno ulogovan korisnik
 
-  const [allCourses, setAllCourses] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);   // lista svih kurseva koji postoje u bazi
+  const [courses, setCourses] = useState([]);        // lista kurseva nakon sto je korisnik izvrsio filtriranje
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredInstructor, setFilteredInstructor] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");   //tekst iz pretrage
+  const [filteredInstructor, setFilteredInstructor] = useState("");   //odabran nastavnik po filteru
 
   // Klijentska paginacija
   const [page, setPage] = useState(1);
-  const perPage = 4;
+  const perPage = 4;                                // prikazuju se 4 kurseva po stranici 
 
   // — YouTube pretraga (playlist)
   const youtubeLinkFor = (title) => {
@@ -95,7 +95,7 @@ const Courses = () => {
     fetchCourses();
   }, []);
 
-  const watchedKey = `watchedCourses_${user?.id ?? "guest"}`;
+  const watchedKey = `watchedCourses_${user?.id ?? "guest"}`;                // cuvamo lokalno koje je sve kurseve taj korisnik pogledao
   const getWatched = () => {
     try {
       return JSON.parse(localStorage.getItem(watchedKey) || "[]");
@@ -109,7 +109,7 @@ const Courses = () => {
     } catch {}
   };
 
-  const certKey = `certificates_${user?.id ?? "guest"}`;
+  const certKey = `certificates_${user?.id ?? "guest"}`;                   // cuvamo lokalno koje je sertifikate sve taj korisnik dobio
   const getCerts = () => {
     try {
       return JSON.parse(localStorage.getItem(certKey) || "[]");
@@ -155,11 +155,11 @@ const Courses = () => {
     }
   };
 
-  const recordWatchedCourse = async (course) => {
+  const recordWatchedCourse = async (course) => {            //evidentiramo gledanje kursa i sertifikat
     if (!user || user.role !== "student") return;
 
     const current = getWatched();
-    if (!current.some((c) => c.id === course.id)) {
+    if (!current.some((c) => c.id === course.id)) {             // proveravamo da li je taj student vec pogledao taj kurs, radi evidencije
       saveWatched([
         { id: course.id, title: course.title, instructor: course.instructor },
         ...current,
@@ -167,7 +167,7 @@ const Courses = () => {
     }
 
     const certs = getCerts();
-    if (!certs.some((c) => c.id === course.id)) {
+    if (!certs.some((c) => c.id === course.id)) {        // proveravamo da li taj student vec ima taj sertifikat, necemo duplo
       saveCerts([
         {
           id: course.id,
@@ -197,10 +197,10 @@ const Courses = () => {
   };
 
   const canDelete = (course) =>
-    user?.role === "teacher" && user?.id && user.id === course.teacherId;
+    user?.role === "teacher" && user?.id && user.id === course.teacherId;  // ko moze da brise kurs
 
   const handleDeleteCourse = async (courseId) => {
-    const sure = window.confirm("Da li ste sigurni da želite da obrišete kurs?");
+    const sure = window.confirm("Da li ste sigurni da želite da obrišete kurs?");    // brisanje kursa
     if (!sure) return;
 
     try {
@@ -237,9 +237,9 @@ const Courses = () => {
 
   // — Filteri
   const uniqueInstructors = [...new Set(allCourses.map((c) => c.instructor))];
-  const normalized = (s) => (s ?? "").toString().trim().toLowerCase();
+  const normalized = (s) => (s ?? "").toString().trim().toLowerCase();            
 
-  const applyFilters = (list) => {
+  const applyFilters = (list) => {                       // deo za filtriranje, prvo primenjujemo filter po search delu pa po nastavniku
     let out = list;
     if (normalized(searchTerm)) {
       const q = normalized(searchTerm);
@@ -253,15 +253,15 @@ const Courses = () => {
 
   useEffect(() => {
     const filtered = applyFilters(allCourses);
-    setCourses(filtered);
+    setCourses(filtered);                             // ucitavamo sada novu, filtriranu listu kurseva
     setPage(1);
-  }, [allCourses, searchTerm, filteredInstructor]); // eslint-disable-line
+  }, [allCourses, searchTerm, filteredInstructor]); 
 
   // — Paginacija
   const { visibleCourses, totalPages, totalCount } = useMemo(() => {
-    const total = courses.length;
-    const last = Math.max(1, Math.ceil(total / perPage));
-    const safePage = Math.min(Math.max(1, page), last);
+    const total = courses.length;                        //ukupno kurseva
+    const last = Math.max(1, Math.ceil(total / perPage));//ukupno strana
+    const safePage = Math.min(Math.max(1, page), last);  //ogranicimo da bude izmedju 1 i last
     const start = (safePage - 1) * perPage;
     const end = start + perPage;
     return {

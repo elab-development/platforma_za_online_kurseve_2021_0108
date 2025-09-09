@@ -29,9 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('can:delete,course');
 
     //  Resource ruta za prijave na kurs
-    Route::apiResource('courses.enrollments', EnrollmentController::class)
+    Route::apiResource('courses.enrollments', EnrollmentController::class)   // pravimo ugnjezdenu resurs rutu, enroll ce uvek
+                                                                             // pripadati nekom kursu  
         ->only(['store'])
-        ->middleware('can:enroll,course');
+        ->middleware('can:enroll,course');  // ovime prvo izvrsavamo proveru da li trenutni korisnik moze da izvrsi ovu akciju
 
     //  Sertifikati
    Route::get('/users/{user}/certificates', [CertificateController::class, 'index']);

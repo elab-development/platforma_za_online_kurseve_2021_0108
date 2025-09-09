@@ -4,12 +4,12 @@ import { AuthContext } from "../context/AuthContext";
 import { FaAward } from "react-icons/fa";
 
 const CertificatesPage = () => {
-  const { user } = useContext(AuthContext);
-  const [certs, setCerts] = useState([]);
+  const { user } = useContext(AuthContext);  // trenutno ulogovan korisnik
+  const [certs, setCerts] = useState([]);    // lista sertifikata koja je za sada prazna 
 
-  const certKey = `certificates_${user?.id ?? "guest"}`;
-
-  const load = () => {
+  const certKey = `certificates_${user?.id ?? "guest"}`;       // ovo je kljuc za local-storage tako da se svakom korisniku sertifikati 
+                                                               // cuvaju odvojeno
+  const load = () => {  // funkcija za ucitavanje sertifikata
     try {
       const raw = localStorage.getItem(certKey);
       const list = raw ? JSON.parse(raw) : [];

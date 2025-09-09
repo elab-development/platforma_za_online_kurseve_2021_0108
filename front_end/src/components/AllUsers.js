@@ -61,9 +61,9 @@ const AllUsers = () => {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       const updated = res.data?.user ?? { ...editUser, ...editForm };
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u)));
-      setEditOpen(false);
-      setEditUser(null);
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u))); // azuriramo listu korisnika u state-u
+      setEditOpen(false);    // zatvaramo modal za izmenu korisnika
+      setEditUser(null);    // cuvamo informacije o tom editovanom korisniku
     } catch (e) {
       console.error("Greška pri izmeni korisnika:", e?.response?.data || e.message);
       const d = e?.response?.data;
