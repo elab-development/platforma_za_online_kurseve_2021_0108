@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache; // ⬅️ dodato
+use Illuminate\Support\Facades\Cache; 
 
 class CourseController extends Controller
 {
@@ -15,7 +15,7 @@ class CourseController extends Controller
         $page    = (int) $request->query('page', 1);
 
         
-        $cacheKey = "courses_page_{$page}_per_{$perPage}";
+        $cacheKey = "courses_page_{$page}_per_{$perPage}";        // kesiranje podataka
 
         $courses = Cache::remember($cacheKey, 60, function () use ($perPage, $page) {
             return Course::query()

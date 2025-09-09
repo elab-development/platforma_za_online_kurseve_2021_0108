@@ -189,7 +189,7 @@ const Courses = () => {
 
   const handleViewCourse = async (course) => {
     try {
-      await enrollInCourse(course.id);
+      await enrollInCourse(course.id);               // kojim ce se redosledom desavati kada korisnik klikne na "pogledaj kurs"
       await recordWatchedCourse(course);
     } finally {
       window.open(course.link, "_blank", "noopener,noreferrer");
