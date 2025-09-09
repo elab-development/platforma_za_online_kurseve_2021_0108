@@ -261,7 +261,7 @@ const Courses = () => {
   const { visibleCourses, totalPages, totalCount } = useMemo(() => {
     const total = courses.length;                        //ukupno kurseva
     const last = Math.max(1, Math.ceil(total / perPage));//ukupno strana
-    const safePage = Math.min(Math.max(1, page), last);  //ogranicimo da bude izmedju 1 i last
+    const safePage = Math.min(Math.max(1, page), last);  //ogranicimo da strana bude izmedju 1 i last 
     const start = (safePage - 1) * perPage;
     const end = start + perPage;
     return {

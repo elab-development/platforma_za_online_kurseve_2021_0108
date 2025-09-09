@@ -2,7 +2,7 @@ import { createContext, useState } from "react";
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {   // samo children imaju pristup AuthContextu
   const [user, setUser] = useState(() => {
     // Proveri da li postoji korisnik u localStorage pri pokretanju aplikacije
     const storedUser = localStorage.getItem("user");

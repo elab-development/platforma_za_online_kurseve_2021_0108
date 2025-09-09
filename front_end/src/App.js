@@ -13,9 +13,9 @@ import Settings from "./components/Settings";
 import AllUsers from "./components/AllUsers";
 import MyClasses from "./components/MyClasses";
 
-const ProtectedRoute = ({ element }) => {
-  const { user } = useContext(AuthContext);
-  return user ? element : <Navigate to="/" />;
+const ProtectedRoute = ({ element }) => {       // zasticene rute
+  const { user } = useContext(AuthContext);    
+  return user ? element : <Navigate to="/" />;    // ukoliko je korisnik ulogovan, odvedi ga na starnicu gde zeli a ukoliko nije, na login
 };
 
 function App() {

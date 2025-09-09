@@ -19,7 +19,7 @@ class CourseController extends Controller
 
         $courses = Cache::remember($cacheKey, 60, function () use ($perPage, $page) {
             return Course::query()
-                ->with(['teacher', 'enrollments'])
+                ->with(['teacher', 'enrollments'])      // ucitava podatke o nastavniku i ucitava sve prijave studenta na kurs
                 ->orderByDesc('created_at')
                 ->paginate($perPage, ['*'], 'page', $page);
         });
